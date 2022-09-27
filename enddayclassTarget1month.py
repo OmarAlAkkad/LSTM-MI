@@ -103,7 +103,7 @@ def build_model(train):
     # # cnn.add(Flatten())
     # model.add(TimeDistributed(Dense(32)))
     model.add(LSTM(256, activation = 'relu',return_sequences=True, input_shape = (train.shape[1], train.shape[2])))
-    # model.add(LSTM(128, activation = 'tanh',return_sequences=True, input_shape = (train.shape[1], train.shape[2])))
+    model.add(LSTM(128, activation = 'tanh',return_sequences=True, input_shape = (train.shape[1], train.shape[2])))
     model.add(LSTM(64, activation = 'tanh'))
     model.add(Dropout(0.2))
     model.add(Dense(64,activation = 'relu'))
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         test_rmse = []
 
         model = build_model(x_train)
-        model.fit(x_train, y_train, epochs = 50, validation_data = (x_test, y_test), verbose =1)
+        model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1)
         model.save(f'{month}_target_enddays_class')
 
         train_predictions = model.predict(x_train)

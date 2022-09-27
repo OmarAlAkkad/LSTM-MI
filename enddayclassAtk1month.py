@@ -76,7 +76,8 @@ def create_model(input_shape, number_of_classes):
     model.add(Flatten()) #flatten the array to input to dense layer
     model.add(BatchNormalization())
 
-    model.add(Dense(1000, activation='relu',  kernel_initializer='he_normal'))
+    model.add(Dense(100, activation='relu',  kernel_initializer='he_normal'))
+    model.add(Dense(50, activation = 'relu', kernel_initializer='he_normal'))
     model.add(Dense(2, activation='softmax')) #output layer with softmax activation function to get predictions vector
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model # return the created model
@@ -102,7 +103,7 @@ if __name__ == "__main__":
         number_of_classes = 2
         input_shape = (x_train.shape[1],x_train.shape[2])
         model = create_model(input_shape, number_of_classes)
-        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1)
+        history = model.fit(x_train, y_train, epochs = 200, validation_data = (x_test, y_test), verbose =1)
 
         train_predictions = model.predict(x_train)
         train_predictions_labels = []
@@ -183,7 +184,7 @@ if __name__ == "__main__":
              'Negative Recall': Negative_Recall,
              'F1 Score': F1_Score,
              })
-        d.to_csv(f'{month}_attack_models_class.csv')
+        d.to_csv(f'100_epochs_attack_models_class.csv')
 
         y_points_train = []
         x_points_train = np.arange(717,1500)
