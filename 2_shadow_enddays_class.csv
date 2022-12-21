@@ -1,3 +1,0 @@
-,Model,Data,Accuracy,Precision,Recall,Negative Recall,F1 Score
-0,model,train,0.9984685778617859,1.0,1.0,1.0,0.9989350372736955
-1,model,test,0.8888888955116272,0.95,0.95,0.9,0.9156626506024096
