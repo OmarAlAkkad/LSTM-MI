@@ -29,20 +29,28 @@ def load_data(k):
     train_weights = _get_K(train_weights,k)
     test_weights = _get_K(test_weights,k)
 
-    x_train = []
-    for element in range(len(shadow['Inputs'])):
-        x_train.append(shadow['Inputs'][element])
-        for j in range(len(train_weights[element])):
-            x_train[element].append(train_weights[element][j])
+    # x_train = []
+    # for element in range(len(shadow['Inputs'])):
+    #     x_train.append(shadow['Inputs'][element])
+    #     for j in range(len(train_weights[element])):
+    #         x_train[element].append(train_weights[element][j])
 
     # x_train = np.reshape(x_train,(-1,8))
     y_train = shadow['Labels'].to_numpy()
 
+    # x_test = []
+    # for element in range(len(target['Inputs'])):
+    #     x_test.append(target['Inputs'][element])
+    #     for j in range(len(test_weights[element])):
+    #         x_test[element].append(test_weights[element][j])
+
+    x_train = []
+    for element in range(len(shadow['Inputs'])):
+        x_train.append(train_weights[element])
+
     x_test = []
     for element in range(len(target['Inputs'])):
-        x_test.append(target['Inputs'][element])
-        for j in range(len(test_weights[element])):
-            x_test[element].append(test_weights[element][j])
+        x_test.append(test_weights[element])
 
     # x_test = np.reshape(x_test,(-1,8))
     y_test = target['Labels'].to_numpy()
@@ -128,10 +136,9 @@ if __name__ == "__main__":
     Data = []
     scores = []
 
-    topk = [0,10,20,30,40,50,75,100]
+    topk = [10,20,30,40,50,75,100]
 
     for k in topk:
-        k = 100
         x_train, y_train, x_test, y_test = load_data(k)
         xgboost_model(x_train,y_train,x_test,y_test)
         x_train, y_train = preprocess_data(x_train, y_train)
