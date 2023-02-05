@@ -3,6 +3,7 @@ from keras import backend as K
 from rnn_Input_layer import rnn_input_layer
 from keras.layers import Concatenate, Reshape, Bidirectional, CuDNNLSTM, LSTM
 import keras
+import tensorflow as tf
 
 
 class renet_module(keras.Model):
@@ -17,7 +18,7 @@ class renet_module(keras.Model):
         self.lstm = CuDNNLSTM(hidden_size, return_sequences=True)
 
         self.concatenate = Concatenate(axis = 2)
-        self.Reshape = Reshape((X_height/self.receptive_filter_size, X_width/self.receptive_filter_size, -1))
+        self.Reshape = Reshape((int(X_height/self.receptive_filter_size), int(X_width/self.receptive_filter_size), -1))
 
     def call(self,X):
         print(X.shape)
@@ -28,7 +29,6 @@ class renet_module(keras.Model):
         renet2 = self.lstm(vertical_rnn_inputs_rev)
         renet3 = self.lstm(horizontal_rnn_inputs_fw)
         renet4 = self.lstm(horizontal_rnn_inputs_rev)
-        print(renet4)
         renet_concat = self.concatenate([renet1, renet2, renet3, renet4])
         renet = self.Reshape(renet_concat)
 

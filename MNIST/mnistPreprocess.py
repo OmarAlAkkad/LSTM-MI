@@ -5,12 +5,8 @@ Created on Wed Jan 25 13:24:52 2023
 @author: omars
 """
 import pickle
-import math
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import  Conv2D, MaxPooling2D, Dense, Flatten, Dropout
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 def create_dataset():

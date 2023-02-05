@@ -9,7 +9,7 @@ from keras.layers import *
 #from Input_layer import vertical_layer
 import numpy as np
 import tensorflow as tf
-from keras.layers import Conv2D, Lambda, Reshape, Bidirectional, merge, CuDNNLSTM
+from keras.layers import Conv2D, Lambda, Reshape, Bidirectional, CuDNNLSTM
 from renet_layer import renet_module
 import keras
 

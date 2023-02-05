@@ -17,7 +17,6 @@ import keras
 from keras import models, layers
 from keras import backend as K
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
-from keras_self_attention import SeqSelfAttention
 
 def load_data():
     data_file = open('mnist_shadow_data.p', 'rb')
