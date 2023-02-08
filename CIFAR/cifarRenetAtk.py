@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 25 14:13:41 2023
+Created on Mon Feb  6 20:21:53 2023
 
 @author: omars
 """
@@ -15,11 +15,11 @@ from sklearn.metrics import f1_score,recall_score,precision_score, confusion_mat
 from sklearn.metrics import roc_auc_score
 
 def load_data():
-    data_file = open(f'target_renet_dataframe_mnist.p', 'rb')
+    data_file = open(f'target_renet_dataframe_cifar.p', 'rb')
     target = pickle.load(data_file)
     data_file.close()
 
-    data_file = open(f'shadow_renet_dataframe_mnist.p', 'rb')
+    data_file = open(f'shadow_renet_dataframe_cifar.p', 'rb')
     shadow = pickle.load(data_file)
     data_file.close()
 
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     input_shape = (x_train.shape[1],x_train.shape[2])
     model = create_model(input_shape)
-    history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size= 150)
+    history = model.fit(x_train, y_train, epochs = 10, validation_data = (x_test, y_test), verbose =1,batch_size= 150)
 
     train_predictions = model.predict(x_train)
     train_predictions_labels = []
@@ -167,7 +167,7 @@ if __name__ == "__main__":
          'Negative Recall': Negative_Recall,
          'F1 Score': F1_Score,
          })
-    d.to_csv(f'mnist_attack_models.csv')
+    d.to_csv(f'cifar_attack_models.csv')
 
     print("train accuracy",train_accuracy)
     print("test accuracy",test_accuracy)
