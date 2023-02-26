@@ -30,7 +30,7 @@ def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
     #convert inputs to float type and normalize to to range 0,1
     inputs = inputs.astype("float32") / 255.0
-    inputs = inputs.reshape(-1,28,28,1)
+    inputs = inputs.reshape(-1,32,32,3)
     #Let images have the shape (..., 1)
     # inputs = np.expand_dims(inputs, -1)
     #one hot encode labels
@@ -67,10 +67,10 @@ if __name__ == '__main__':
 
     opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon = 0.1, decay = 1e-6)
 
-    model = build_model(10, 28, 28)
+    model = build_model(10, 32, 32)
     model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
 
-    history=model.fit(x_train,y_train,batch_size=1,epochs=5,validation_data = (x_test, y_test))
+    history=model.fit(x_train,y_train,batch_size=3000,epochs=100,validation_data = (x_test, y_test))
 
     print('Train loss:', history.history['loss'])
     print('Train accuracy : ', history.history['accuracy'])

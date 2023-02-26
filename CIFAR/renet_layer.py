@@ -7,7 +7,7 @@ import tensorflow as tf
 
 
 class renet_module(keras.Model):
-    def __init__(self, X_height, X_width, dim = 3, receptive_filter_size = 2, batch_size = 1, hidden_size = 320):
+    def __init__(self, X_height, X_width, dim = 3, receptive_filter_size = 4, batch_size = 3000, hidden_size = 320):
         super(renet_module,self).__init__()
 
         self.dim = dim
@@ -21,7 +21,6 @@ class renet_module(keras.Model):
         self.Reshape = Reshape((int(X_height/self.receptive_filter_size), int(X_width/self.receptive_filter_size), -1))
 
     def call(self,X):
-        print(X.shape)
 
         _, X_height, X_width, X_channel= X.get_shape()
         vertical_rnn_inputs_fw,vertical_rnn_inputs_rev,horizontal_rnn_inputs_fw,horizontal_rnn_inputs_rev = self.rnn_input_layer(X)
