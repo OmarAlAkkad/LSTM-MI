@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     x_train, y_train , x_test, y_test = prepare_sets(inputs, labels, num_classes)
 
-    opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon = 0.1, decay = 1e-6)
+    opt = Adam(lr=0.01)
 
     model = build_model(10, 32, 32)
     model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
