@@ -66,12 +66,12 @@ if __name__ == '__main__':
 
     x_train, y_train , x_test, y_test = prepare_sets(inputs, labels, num_classes)
 
-    opt = Adam(lr=0.01)
+    opt = Adam(learning_rate = 0.01, clipnorm = 10.0)
 
     model = build_model(10, 32, 32)
-    model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
 
-    history=model.fit(x_train,y_train,batch_size=3000,epochs=100,validation_data = (x_test, y_test))
+    history=model.fit(x_train,y_train,batch_size=300,epochs=100,validation_data = (x_test, y_test))
 
     print('Train loss:', history.history['loss'])
     print('Train accuracy : ', history.history['accuracy'])
