@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Feb  6 20:21:52 2023
+Created on Sun Jan 29 17:32:23 2023
 
 @author: omars
 """
@@ -15,6 +14,7 @@ import pandas as pd
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
 import random
 import keras.backend as K
+import os
 
 def load_data():
     data_file = open('cifar_target_data.p', 'rb')
@@ -68,10 +68,27 @@ if __name__ == '__main__':
 
     opt = Adam(learning_rate = 0.01, clipnorm = 10.0)
 
-    model = build_model(10, 32, 32)
-    model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
+    model = build_model(10, 32, 32, 60)
+    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
 
-    history=model.fit(x_train,y_train,batch_size=300,epochs=100,validation_data = (x_test, y_test))
+    checkpoint_path = "training_1/cp.ckpt"
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+
+    # Create a callback that saves the model's weights
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                     save_weights_only=True,
+                                                     verbose=1)
+
+    history=model.fit(x_train,y_train,batch_size=60,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+
+    # save weights to disk
+
+    # redefine the model with batch size 1, and reload the weight
+
+    model = build_model(10, 32, 32, 1)
+
+    model.load_weights(checkpoint_path)
+
 
     print('Train loss:', history.history['loss'])
     print('Train accuracy : ', history.history['accuracy'])
@@ -80,16 +97,14 @@ if __name__ == '__main__':
     error_rate = round(1 - history.history['val_accuracy'][0], 3)
     print('error rate of :', error_rate)
 
-    train_accuracy = history.history['accuracy'][-1]
-    test_accuracy = history.history['val_accuracy'][-1]
-
-    preds = K.eval(model.predict(x_train.reshape(15000,-1)))
+    train_accuracy = history.history['accuracy'][0]
+    test_accuracy = history.history['val_accuracy'][0]
 
     train_predictions = np.empty(0, dtype="float32")
     test_predictions = np.empty(0, dtype= 'float32')
 
     for x in range(len(x_train)):
-        train_predictions = np.append(train_predictions, np.array(K.eval(model.predict(x_train[x].reshape(1,-1)))))
+        train_predictions = np.append(train_predictions, np.array(K.eval(model.predict(np.expand_dims(x_train[x], axis=0)))))
 
     for x in range(len(x_test)):
         test_predictions = np.append(test_predictions, np.array(K.eval(model.predict(x_test[x].reshape(1,-1)))))
