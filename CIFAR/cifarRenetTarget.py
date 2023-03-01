@@ -71,7 +71,7 @@ if __name__ == '__main__':
     model = build_model(10, 32, 32, 60)
     model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
 
-    checkpoint_path = "training_1/cp.ckpt"
+    checkpoint_path = "training_target/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)
 
     # Create a callback that saves the model's weights
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    history=model.fit(x_train,y_train,batch_size=60,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    history=model.fit(x_train,y_train,batch_size=60,epochs=5,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     # save weights to disk
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         train_predictions = np.append(train_predictions, np.array(K.eval(model.predict(np.expand_dims(x_train[x], axis=0)))))
 
     for x in range(len(x_test)):
-        test_predictions = np.append(test_predictions, np.array(K.eval(model.predict(x_test[x].reshape(1,-1)))))
+        test_predictions = np.append(test_predictions, np.array(K.eval(model.predict(np.expand_dims(x_test[x], axis=0)))))
 
     train_predictions = train_predictions.reshape(-1,num_classes)
     test_predictions = test_predictions.reshape(-1,num_classes)
