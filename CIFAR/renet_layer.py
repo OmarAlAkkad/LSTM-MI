@@ -7,14 +7,14 @@ import tensorflow as tf
 
 
 class renet_module(keras.Model):
-    def __init__(self, X_height, X_width, dim = 3, receptive_filter_size = 4, batch_size = 300, hidden_size = 320):
+    def __init__(self, X_height, X_width, dim = 3, receptive_filter_size = 4, batch_size = 60, hidden_size = 320):
         super(renet_module,self).__init__()
 
         self.dim = dim
         self.hidden_size = hidden_size
         self.receptive_filter_size = receptive_filter_size
 
-        self.rnn_input_layer = rnn_input_layer(dim,receptive_filter_size)
+        self.rnn_input_layer = rnn_input_layer(dim,receptive_filter_size, batch_size=batch_size)
         self.lstm = CuDNNLSTM(hidden_size, return_sequences=True)
 
         self.concatenate = Concatenate(axis = 2)

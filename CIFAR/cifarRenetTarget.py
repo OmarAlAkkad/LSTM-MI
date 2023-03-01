@@ -69,7 +69,7 @@ if __name__ == '__main__':
     opt = Adam(learning_rate = 0.01, clipnorm = 10.0)
 
     model = build_model(10, 32, 32)
-    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
 
     history=model.fit(x_train,y_train,batch_size=300,epochs=100,validation_data = (x_test, y_test))
 
@@ -80,8 +80,10 @@ if __name__ == '__main__':
     error_rate = round(1 - history.history['val_accuracy'][0], 3)
     print('error rate of :', error_rate)
 
-    train_accuracy = history.history['accuracy'][0]
-    test_accuracy = history.history['val_accuracy'][0]
+    train_accuracy = history.history['accuracy'][-1]
+    test_accuracy = history.history['val_accuracy'][-1]
+
+    preds = K.eval(model.predict(x_train.reshape(15000,-1)))
 
     train_predictions = np.empty(0, dtype="float32")
     test_predictions = np.empty(0, dtype= 'float32')

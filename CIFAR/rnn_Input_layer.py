@@ -18,7 +18,7 @@ from keras import backend as K
 import tensorflow as tf
 
 class rnn_input_layer(layers.Layer):
-    def __init__(self, dim=3, receptive_filter_size = 4, batch_size = 300):
+    def __init__(self, dim=3, receptive_filter_size = 4, batch_size = 60):
 
         super(rnn_input_layer, self).__init__()
 
