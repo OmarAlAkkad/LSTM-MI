@@ -4,7 +4,7 @@ Created on Sun Jan 29 17:32:23 2023
 @author: omars
 """
 from model import build_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, SGD
 import pickle
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     x_train, y_train , x_test, y_test = prepare_sets(inputs, labels, num_classes)
 
-    opt = Adam(learning_rate = 0.01, clipnorm = 10.0)
+    opt = SGD(learning_rate = 0.01, clipnorm = 10.0)
 
     model = build_model(10, 32, 32, 60)
     model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])

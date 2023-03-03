@@ -44,7 +44,7 @@ def create_dataset():
     return inputs, labels
 
 def split_target_shadow(X,y,split):
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = split, random_state = 42, stratify=y)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = split, stratify=y)
 
     return x_train, x_test, y_train, y_test
 
