@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
 import random
 import keras.backend as K
+from sklearn.preprocessing import StandardScaler
 import os
 
 def load_data():
@@ -30,7 +31,9 @@ def load_data():
 def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
     #convert inputs to float type and normalize to to range 0,1
-    inputs = inputs.astype("float32") / 255.0
+    inputs = inputs.reshape(-1,1)
+    scaler = StandardScaler()
+    inputs = scaler.fit_transform(inputs, labels)
     inputs = inputs.reshape(-1,32,32,3)
     #Let images have the shape (..., 1)
     # inputs = np.expand_dims(inputs, -1)

@@ -23,7 +23,7 @@ class build_model(keras.Model):
         self.upsample = convolutional.UpSampling2D(size=(4, 4), data_format=None)
         self.flatten = Flatten()
         self.dense = Dense(3072, activation = 'relu')
-        #self.dense1 = Dense(3072, activation = 'relu')
+        # self.dense1 = Dense(3072, activation = 'relu')
         self.outputlayer = Dense(nClasses,activation = 'softmax')
 
     def call(self, inputs):
@@ -32,7 +32,7 @@ class build_model(keras.Model):
         upsample = self.upsample(conv)
         flattened = self.flatten(upsample)
         dense1 = self.dense(flattened)
-        #dense2 = self.dense1(dense1)
+        # dense2 = self.dense1(dense1)
         outputs = self.outputlayer(dense1)
 
         return outputs

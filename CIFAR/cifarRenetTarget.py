@@ -79,7 +79,7 @@ if __name__ == '__main__':
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    history=model.fit(x_train,y_train,batch_size=60,epochs=5,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    history=model.fit(x_train,y_train,batch_size=60,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     # save weights to disk
 
