@@ -31,12 +31,14 @@ def load_data():
 def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
     #convert inputs to float type and normalize to to range 0,1
-    inputs = inputs.reshape(-1,1)
-    scaler = StandardScaler()
-    inputs = scaler.fit_transform(inputs, labels)
+    #inputs = inputs.reshape(-1,1)
+    #scaler = StandardScaler()
+    #inputs = scaler.fit_transform(inputs, labels)
+    #inputs = inputs.reshape(-1,32,32,3)
+    inputs = inputs.astype('float32') /255.0
     inputs = inputs.reshape(-1,32,32,3)
     #Let images have the shape (..., 1)
-    # inputs = np.expand_dims(inputs, -1)
+    #inputs = np.expand_dims(inputs, -1)
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, number_of_classes)
     x_train, x_test, y_train, y_test= train_test_split(inputs, labels, stratify=labels, test_size=0.5, random_state=42)
@@ -69,10 +71,10 @@ if __name__ == '__main__':
 
     x_train, y_train , x_test, y_test = prepare_sets(inputs, labels, num_classes)
 
-    opt = SGD(learning_rate = 0.01, clipnorm = 10.0)
+    opt = Adam(learning_rate = 0.01, clipnorm = 10.0)
 
     model = build_model(10, 32, 32, 60)
-    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
 
     checkpoint_path = "training_shadow/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)

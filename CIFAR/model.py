@@ -22,17 +22,17 @@ class build_model(keras.Model):
         self.conv = Conv2D(1, kernel_size=(1, 1))
         self.upsample = convolutional.UpSampling2D(size=(4, 4), data_format=None)
         self.flatten = Flatten()
-        self.dense = Dense(3072, activation = 'relu')
-        # self.dense1 = Dense(3072, activation = 'relu')
+        self.dense = Dense(512, activation = 'relu')
+        self.dense1 = Dense(128, activation = 'relu')
         self.outputlayer = Dense(nClasses,activation = 'softmax')
 
     def call(self, inputs):
         renet = self.renet_module(inputs)
-        conv = self.conv(renet)
-        upsample = self.upsample(conv)
-        flattened = self.flatten(upsample)
+        #conv = self.conv(renet)
+        #upsample = self.upsample(conv)
+        flattened = self.flatten(renet)
         dense1 = self.dense(flattened)
-        # dense2 = self.dense1(dense1)
-        outputs = self.outputlayer(dense1)
+        dense2 = self.dense1(dense1)
+        outputs = self.outputlayer(dense2)
 
         return outputs

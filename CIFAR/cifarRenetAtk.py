@@ -10,7 +10,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, AveragePooling2D, LSTM, BatchNormalization
 import pandas as pd
-import xgboost
+#import xgboost
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
 from sklearn.metrics import roc_auc_score
 
