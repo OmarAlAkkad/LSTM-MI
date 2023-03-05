@@ -102,8 +102,8 @@ if __name__ == '__main__':
     error_rate = round(1 - history.history['val_accuracy'][0], 3)
     print('error rate of :', error_rate)
 
-    train_accuracy = history.history['accuracy'][0]
-    test_accuracy = history.history['val_accuracy'][0]
+    train_accuracy = history.history['accuracy'][-1]
+    test_accuracy = history.history['val_accuracy'][-1]
 
     train_predictions = np.empty(0, dtype="float32")
     test_predictions = np.empty(0, dtype= 'float32')

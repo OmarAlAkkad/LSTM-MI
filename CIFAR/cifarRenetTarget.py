@@ -40,7 +40,7 @@ def prepare_sets(inputs, labels,number_of_classes):
     # inputs = np.expand_dims(inputs, -1)
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, number_of_classes)
-    x_train, x_test, y_train, y_test= train_test_split(inputs, labels, stratify=labels, test_size=0.5, random_state=42)
+    x_train, x_test, y_train, y_test= train_test_split(inputs, labels, stratify=labels, test_size=0.2, random_state=42)
 
     return x_train, y_train , x_test, y_test
 
@@ -101,8 +101,8 @@ if __name__ == '__main__':
     error_rate = round(1 - history.history['val_accuracy'][0], 3)
     print('error rate of :', error_rate)
 
-    train_accuracy = history.history['accuracy'][0]
-    test_accuracy = history.history['val_accuracy'][0]
+    train_accuracy = history.history['accuracy'][-1]
+    test_accuracy = history.history['val_accuracy'][-1]
 
     train_predictions = np.empty(0, dtype="float32")
     test_predictions = np.empty(0, dtype= 'float32')

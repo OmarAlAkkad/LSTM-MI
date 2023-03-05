@@ -45,7 +45,7 @@ class rnn_input_layer(layers.Layer):
         print(image_patches.shape)
 
         image_patches = tf.reshape(image_patches, [int(self.batch_size), int(image_patches_height), int(image_patches_width), int(receptive_filter_size) * int(receptive_filter_size) * int(X_channel)])
-
+        print(image_patches.shape)
         return image_patches
 
     def get_vertical_rnn_inputs(self, image_patches,forward):
