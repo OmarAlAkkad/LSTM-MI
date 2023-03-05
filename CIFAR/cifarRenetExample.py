@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from model import build_model
 import os
+import cv2
+import random
 
 def create_dataset():
     #load mnist dataset from keras.
@@ -62,11 +64,54 @@ def prepare_sets(inputs, labels,number_of_classes):
 
     return x_train, y_train , x_test, y_test
 
+def augment_data(inputs, labels):
+    flipped = []
+    for image in inputs:
+        chance = random.randint(0,3)
+        if chance == 0:
+            flipped.append(cv2.flip(image,1))
+        elif chance == 1:
+            flipped.append(cv2.flip(image,0))
+        else:
+            flipped.append(image)
+
+    right = np.float32([[1, 0, 2], [0, 1, 0]])
+    left = np.float32([[1, 0, -2], [0, 1, 0]])
+    up = np.float32([[1, 0, 0], [0, 1, -2]])
+    down = np.float32([[1, 0, 0], [0, 1, 2]])
+
+    shifted = []
+    for image in flipped:
+        chance = random.randint(0,3)
+        if chance == 0:
+            shifted.append(cv2.warpAffine(image, right, (image.shape[1], image.shape[0])))
+        elif chance == 1:
+            shifted.append(cv2.warpAffine(image, left, (image.shape[1], image.shape[0])))
+        else:
+            shifted.append(image)
+
+    shifted2 = []
+    for image in shifted:
+        chance = random.randint(0,3)
+        if chance == 0:
+            shifted2.append(cv2.warpAffine(image, up, (image.shape[1], image.shape[0])))
+        elif chance == 1:
+            shifted2.append(cv2.warpAffine(image, down, (image.shape[1], image.shape[0])))
+        else:
+            shifted2.append(image)
+
+    new_train = np.append(shifted2,inputs).reshape(-1,32,32,3)
+    new_labels = np.append(labels, labels).reshape(-1,1)
+
+    return np.array(new_train), np.array(new_labels)
+
 if __name__ == "__main__":
     number = 10
     inputs, labels = create_dataset()
 
-    x_train, y_train, x_test, y_test = prepare_sets(inputs, labels, number)
+    inputs1, labels1 = augment_data(inputs, labels)
+
+    x_train, y_train, x_test, y_test = prepare_sets(inputs1, labels1, number)
 
     model = build_model(10, 32, 32, 60)
     model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
