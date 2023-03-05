@@ -27,25 +27,25 @@ def create_dataset():
     x_ = test[0]
     y_ = test[1]
 
-    inputs = []
-    for i in range(len(y)):
-        inputs.append(x[i])
+    # inputs = []
+    # for i in range(len(y)):
+    #     inputs.append(x[i])
 
-    for i in range(len(y_)):
-        inputs.append(x_[i])
+    # for i in range(len(y_)):
+    #     inputs.append(x_[i])
 
-    inputs = np.array(inputs)
+    # inputs = np.array(inputs)
 
-    labels = []
-    for i in range(len(y)):
-        labels.append(y[i])
+    # labels = []
+    # for i in range(len(y)):
+    #     labels.append(y[i])
 
-    for i in range(len(y_)):
-        labels.append(y_[i])
+    # for i in range(len(y_)):
+    #     labels.append(y_[i])
 
-    labels = np.array(labels)
+    # labels = np.array(labels)
 
-    return inputs, labels
+    return x, y, x_, y_
 
 def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
@@ -60,9 +60,10 @@ def prepare_sets(inputs, labels,number_of_classes):
     #inputs = np.expand_dims(inputs, -1)
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, number_of_classes)
-    x_train, x_test, y_train, y_test= train_test_split(inputs, labels, stratify=labels, test_size=0.2, random_state=42)
 
-    return x_train, y_train , x_test, y_test
+    inputs, _, labels , y__ = train_test_split(inputs, labels, stratify=labels, test_size=0.01, random_state=42)
+
+    return np.array(inputs), np.array(labels)
 
 def augment_data(inputs, labels):
     flipped = []
@@ -107,11 +108,12 @@ def augment_data(inputs, labels):
 
 if __name__ == "__main__":
     number = 10
-    inputs, labels = create_dataset()
+    x_train, y_train, x_test, y_test = create_dataset()
 
-    inputs1, labels1 = augment_data(inputs, labels)
+    x_train, y_train = augment_data(x_train, y_train)
 
-    x_train, y_train, x_test, y_test = prepare_sets(inputs1, labels1, number)
+    x_train, y_train = prepare_sets(x_train, y_train, number)
+    x_test, y_test = prepare_sets(x_test, y_test, number)
 
     model = build_model(10, 32, 32, 60)
     model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
