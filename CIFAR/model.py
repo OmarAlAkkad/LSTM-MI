@@ -32,7 +32,7 @@ class build_model(keras.Model):
         #upsample = self.upsample(conv)
         flattened = self.flatten(renet)
         dense1 = self.dense(flattened)
-        dense2 = self.dense1(dense1)
-        outputs = self.outputlayer(dense2)
+        # dense2 = self.dense1(dense1)
+        outputs = self.outputlayer(dense1)
 
         return outputs

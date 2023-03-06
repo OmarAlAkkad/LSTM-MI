@@ -16,6 +16,8 @@ import random
 import keras.backend as K
 from sklearn.preprocessing import StandardScaler
 import os
+import cv2
+
 
 def load_data():
     data_file = open('cifar_shadow_data.p', 'rb')
@@ -26,7 +28,9 @@ def load_data():
     labels = pickle.load(data_file)
     data_file.close()
 
-    return data, labels
+    x_train, x_test, y_train, y_test = train_test_split(data, labels, stratify=labels, test_size=0.5, random_state=42)
+
+    return x_train, x_test, y_train, y_test
 
 def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
@@ -41,9 +45,8 @@ def prepare_sets(inputs, labels,number_of_classes):
     #inputs = np.expand_dims(inputs, -1)
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, number_of_classes)
-    x_train, x_test, y_train, y_test= train_test_split(inputs, labels, stratify=labels, test_size=0.5, random_state=42)
 
-    return x_train, y_train , x_test, y_test
+    return np.array(inputs), np.array(labels)
 
 
 def plot_data(history):
@@ -64,12 +67,56 @@ def plot_data(history):
     plt.legend()
     plt.show()
 
+def augment_data(inputs, labels):
+    flipped = []
+    for image in inputs:
+        chance = random.randint(0,3)
+        if chance == 0:
+            flipped.append(cv2.flip(image,1))
+        elif chance == 1:
+            flipped.append(cv2.flip(image,0))
+        else:
+            flipped.append(image)
+
+    right = np.float32([[1, 0, 2], [0, 1, 0]])
+    left = np.float32([[1, 0, -2], [0, 1, 0]])
+    up = np.float32([[1, 0, 0], [0, 1, -2]])
+    down = np.float32([[1, 0, 0], [0, 1, 2]])
+
+    shifted = []
+    for image in flipped:
+        chance = random.randint(0,3)
+        if chance == 0:
+            shifted.append(cv2.warpAffine(image, right, (image.shape[1], image.shape[0])))
+        elif chance == 1:
+            shifted.append(cv2.warpAffine(image, left, (image.shape[1], image.shape[0])))
+        else:
+            shifted.append(image)
+
+    shifted2 = []
+    for image in shifted:
+        chance = random.randint(0,3)
+        if chance == 0:
+            shifted2.append(cv2.warpAffine(image, up, (image.shape[1], image.shape[0])))
+        elif chance == 1:
+            shifted2.append(cv2.warpAffine(image, down, (image.shape[1], image.shape[0])))
+        else:
+            shifted2.append(image)
+
+    new_train = np.append(shifted2,inputs).reshape(-1,32,32,3)
+    new_labels = np.append(labels, labels).reshape(-1,1)
+
+    return np.array(new_train), np.array(new_labels)
+
 if __name__ == '__main__':
-    inputs, labels = load_data()
+    x_train, x_test, y_train, y_test = load_data()
 
     num_classes = 10
 
-    x_train, y_train , x_test, y_test = prepare_sets(inputs, labels, num_classes)
+    x_train, y_train = augment_data(x_train, y_train)
+
+    x_train, y_train = prepare_sets(x_train, y_train, num_classes)
+    x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
     opt = Adam(learning_rate = 0.01, clipnorm = 10.0)
 
