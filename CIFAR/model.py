@@ -18,7 +18,12 @@ class build_model(keras.Model):
     def __init__(self, nClasses , input_height, input_width, batch_size):
         super(build_model,self).__init__()
 
-        self.renet_module = renet_module(X_height=input_height, X_width=input_width, dim=3,receptive_filter_size=4, batch_size=batch_size, hidden_size=320)
+        self.renet_module = renet_module(X_height=input_height, X_width=input_width, dim=3,receptive_filter_size=2, batch_size=batch_size, hidden_size=320)
+        self.renet_module1 = renet_module(X_height=8, X_width=8, dim=1280,receptive_filter_size=2, batch_size=batch_size, hidden_size=320)
+        self.renet_module2 = renet_module(X_height=4, X_width=4, dim=5120,receptive_filter_size=2, batch_size=batch_size, hidden_size=320)
+
+
+
         self.conv = Conv2D(1, kernel_size=(1, 1))
         self.upsample = convolutional.UpSampling2D(size=(4, 4), data_format=None)
         self.flatten = Flatten()
@@ -28,8 +33,11 @@ class build_model(keras.Model):
 
     def call(self, inputs):
         renet = self.renet_module(inputs)
-        renet1 = self.renet_module(renet)
-        renet2 = self.renet_module(renet1)
+        print('renet:', renet.shape)
+        renet1 = self.renet_module1(renet)
+        print('renet1:', renet1.shape)
+        renet2 = self.renet_module2(renet1)
+        print('renet2:', renet2.shape)
         #conv = self.conv(renet)
         #upsample = self.upsample(conv)
         flattened = self.flatten(renet2)
