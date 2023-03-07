@@ -115,7 +115,7 @@ if __name__ == "__main__":
     x_train, y_train = prepare_sets(x_train, y_train, number)
     x_test, y_test = prepare_sets(x_test, y_test, number)
 
-    model = build_model(10, 32, 32, 60)
+    model = build_model(10, 32, 32, 5)
     model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
     checkpoint_path = "training_example/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)
@@ -125,5 +125,5 @@ if __name__ == "__main__":
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    history=model.fit(x_train,y_train,batch_size=60,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    history=model.fit(x_train,y_train,batch_size=5,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
