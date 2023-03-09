@@ -1,7 +1,7 @@
 from keras import initializers, layers
 from keras import backend as K
 from rnn_Input_layer import rnn_input_layer
-from keras.layers import Concatenate, Reshape, Bidirectional, CuDNNLSTM, LSTM
+from keras.layers import Concatenate, Reshape, Bidirectional, CuDNNLSTM, LSTM, CuDNNGRU
 import keras
 import tensorflow as tf
 
@@ -16,6 +16,7 @@ class renet_module(keras.Model):
 
         self.rnn_input_layer = rnn_input_layer(dim,receptive_filter_size, batch_size=batch_size)
         self.lstm = CuDNNLSTM(hidden_size, return_sequences=True)
+        self.gru = CuDNNGRU(hidden_size, return_sequences=True)
 
         self.concatenate = Concatenate(axis = 2)
         self.Reshape = Reshape((int(X_height/self.receptive_filter_size), int(X_width/self.receptive_filter_size), -1))
@@ -24,10 +25,10 @@ class renet_module(keras.Model):
 
         _, X_height, X_width, X_channel= X.get_shape()
         vertical_rnn_inputs_fw,vertical_rnn_inputs_rev,horizontal_rnn_inputs_fw,horizontal_rnn_inputs_rev = self.rnn_input_layer(X)
-        renet1 = self.lstm(vertical_rnn_inputs_fw)
-        renet2 = self.lstm(vertical_rnn_inputs_rev)
-        renet3 = self.lstm(horizontal_rnn_inputs_fw)
-        renet4 = self.lstm(horizontal_rnn_inputs_rev)
+        renet1 = self.gru(vertical_rnn_inputs_fw)
+        renet2 = self.gru(vertical_rnn_inputs_rev)
+        renet3 = self.gru(horizontal_rnn_inputs_fw)
+        renet4 = self.gru(horizontal_rnn_inputs_rev)
         renet_concat = self.concatenate([renet1, renet2, renet3, renet4])
         renet = self.Reshape(renet_concat)
 

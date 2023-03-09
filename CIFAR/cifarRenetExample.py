@@ -6,6 +6,7 @@ Created on Sat Mar  4 19:23:59 2023
 """
 import pickle
 import math
+from tensorflow.keras.optimizers import Adam, SGD
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import  Conv2D, MaxPooling2D, Dense, Flatten, Dropout
@@ -15,6 +16,7 @@ from sklearn.model_selection import train_test_split
 from model import build_model
 import os
 import cv2
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import random
 
 def create_dataset():
@@ -53,7 +55,7 @@ def prepare_sets(inputs, labels,number_of_classes):
     #inputs = inputs.reshape(-1,1)
     #scaler = StandardScaler()
     #inputs = scaler.fit_transform(inputs, labels)
-    #inputs = inputs.reshape(-1,32,32,3)
+    # inputs = inputs.reshape(-1,32,32,3)
     inputs = inputs.astype('float32') /255.0
     inputs = inputs.reshape(-1,32,32,3)
     #Let images have the shape (..., 1)
@@ -61,7 +63,7 @@ def prepare_sets(inputs, labels,number_of_classes):
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, number_of_classes)
 
-    inputs, _, labels , y__ = train_test_split(inputs, labels, stratify=labels, test_size=0.01, random_state=42)
+    # inputs, _, labels , y__ = train_test_split(inputs, labels, stratify=labels, test_size=0.01, random_state=42)
 
     return np.array(inputs), np.array(labels)
 
@@ -106,17 +108,53 @@ def augment_data(inputs, labels):
 
     return np.array(new_train), np.array(new_labels)
 
+def augment_images(data, labels):
+    datagen = ImageDataGenerator(
+    featurewise_center=True,
+    featurewise_std_normalization=True,
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    horizontal_flip=True,)
+    # compute quantities required for featurewise normalization
+    # (std, mean, and principal components if ZCA whitening is applied)
+    datagen.fit(data)
+    # fits the model on batches with real-time data augmentation:
+    aug_images = datagen.flow((data,labels), batch_size=1)
+
+    images = []
+    labels = []
+    for image in aug_images:
+        if len(images) == 100000:
+            break
+        images.append(image[0])
+        labels.append(image[1])
+
+    images = np.array(images).reshape(-1,32,32,3)
+    labels = np.array(labels).reshape(-1,10)
+
+    return images,labels
+
+
 if __name__ == "__main__":
     number = 10
     x_train, y_train, x_test, y_test = create_dataset()
 
-    x_train, y_train = augment_data(x_train, y_train)
+    # x_train, y_train = augment_data(x_train, y_train)
 
     x_train, y_train = prepare_sets(x_train, y_train, number)
     x_test, y_test = prepare_sets(x_test, y_test, number)
 
-    model = build_model(10, 32, 32, 5)
-    model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
+    x_train, y_train = augment_images(x_train,y_train)
+
+    y_train_label = []
+    for pred in y_train:
+        y_train_label.append(np.argmax(pred, axis=0))
+
+
+    opt = Adam(learning_rate = 0.0001)
+    model = build_model(10, 32, 32, 30)
+    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
     checkpoint_path = "training_example/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)
 
@@ -125,5 +163,7 @@ if __name__ == "__main__":
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    history=model.fit(x_train,y_train,batch_size=5,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    model.fit(x_train, y_train, batch_size=30, validation_data = (x_test, y_test), epochs=100, callbacks=[cp_callback])
+
+    #history=model.fit(x_train,y_train,batch_size=5,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
