@@ -132,7 +132,7 @@ def augment_images(data, labels):
         labels.append(image[1])
 
     images = np.array(images).reshape(-1,32,32,3)
-    labels = np.array(labels).reshape(-1,10)
+    labels = np.array(labels).reshape(-1,1)
 
     return images,labels
 
