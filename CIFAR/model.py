@@ -9,11 +9,7 @@ from keras.layers import *
 #from Input_layer import vertical_layer
 import numpy as np
 import tensorflow as tf
-<<<<<<< HEAD
 from keras.layers import Dropout, Conv2D, Lambda, Reshape, Bidirectional, CuDNNLSTM, Dense, Flatten
-=======
-from keras.layers import Conv2D, Lambda, Reshape,Dropout, Bidirectional, CuDNNLSTM, Dense, Flatten
->>>>>>> 439b7bdb1086303f88153d4ea0196246ad22cae7
 from renet_layer import renet_module
 import keras
 

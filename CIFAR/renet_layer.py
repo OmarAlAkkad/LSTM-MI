@@ -16,12 +16,7 @@ class renet_module(keras.Model):
 
         self.rnn_input_layer = rnn_input_layer(dim,receptive_filter_size, batch_size=batch_size)
         self.lstm = CuDNNLSTM(hidden_size, return_sequences=True)
-<<<<<<< HEAD
         self.gru = CuDNNGRU(hidden_size, return_sequences = True)
-=======
-        self.gru = CuDNNGRU(hidden_size, return_sequences=True)
-
->>>>>>> 439b7bdb1086303f88153d4ea0196246ad22cae7
         self.concatenate = Concatenate(axis = 2)
         self.Reshape = Reshape((int(X_height/self.receptive_filter_size), int(X_width/self.receptive_filter_size), -1))
 
