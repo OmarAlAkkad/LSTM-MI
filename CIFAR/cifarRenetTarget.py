@@ -109,10 +109,10 @@ def augment_data(inputs, labels):
 
     return np.array(new_train), np.array(new_labels)
 
-def augment_images(data, labels):
+def augment_images(data, labels, number_of_classes):
     datagen = ImageDataGenerator(
     featurewise_center=True,
-    featurewise_std_normalization=True,
+    rescale=1.0/255.0,
     rotation_range=20,
     width_shift_range=0.2,
     height_shift_range=0.2,
@@ -133,6 +133,8 @@ def augment_images(data, labels):
 
     images = np.array(images).reshape(-1,32,32,3)
     labels = np.array(labels).reshape(-1,1)
+    
+    labels = tf.keras.utils.to_categorical(labels, number_of_classes)
 
     return images,labels
 
@@ -141,9 +143,8 @@ if __name__ == '__main__':
 
     num_classes = 10
 
-    x_train, y_train = augment_images(x_train, y_train)
-
-    x_train, y_train = prepare_sets(x_train, y_train, num_classes)
+    x_train, y_train = augment_images(x_train, y_train, num_classes)
+    
     x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
     opt = Adam(learning_rate = 0.0001)
