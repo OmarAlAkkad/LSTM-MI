@@ -16,11 +16,7 @@ from sklearn.model_selection import train_test_split
 from model import build_model
 import os
 import cv2
-<<<<<<< HEAD
-from tensorflow.keras.optimizers import Adam, SGD
-=======
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
->>>>>>> 439b7bdb1086303f88153d4ea0196246ad22cae7
 import random
 
 def create_dataset():
@@ -144,34 +140,19 @@ if __name__ == "__main__":
     number = 10
     x_train, y_train, x_test, y_test = create_dataset()
 
-<<<<<<< HEAD
     #x_train, y_train = augment_data(x_train, y_train)
 
     x_train, y_train = prepare_sets(x_train, y_train, number)
     x_test, y_test = prepare_sets(x_test, y_test, number)
-    
-    opt = Adam(learning_rate = 0.0001)
-    model = build_model(10, 32, 32, 30)
-    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
-    checkpoint_path = "training_example2/cp.ckpt"
-=======
-    # x_train, y_train = augment_data(x_train, y_train)
-
-    x_train, y_train = prepare_sets(x_train, y_train, number)
-    x_test, y_test = prepare_sets(x_test, y_test, number)
-
-    x_train, y_train = augment_images(x_train,y_train)
 
     y_train_label = []
     for pred in y_train:
         y_train_label.append(np.argmax(pred, axis=0))
 
-
     opt = Adam(learning_rate = 0.0001)
     model = build_model(10, 32, 32, 30)
     model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
     checkpoint_path = "training_example/cp.ckpt"
->>>>>>> 439b7bdb1086303f88153d4ea0196246ad22cae7
     checkpoint_dir = os.path.dirname(checkpoint_path)
 
     # Create a callback that saves the model's weights
@@ -179,11 +160,9 @@ if __name__ == "__main__":
                                                      save_weights_only=True,
                                                      verbose=1)
 
-<<<<<<< HEAD
     history=model.fit(x_train,y_train,batch_size=30,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
-=======
+
     model.fit(x_train, y_train, batch_size=30, validation_data = (x_test, y_test), epochs=100, callbacks=[cp_callback])
 
     #history=model.fit(x_train,y_train,batch_size=5,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
->>>>>>> 439b7bdb1086303f88153d4ea0196246ad22cae7
 

@@ -15,6 +15,7 @@ from sklearn.metrics import f1_score,recall_score,precision_score, confusion_mat
 import random
 import keras.backend as K
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import os
 import cv2
 
@@ -108,12 +109,39 @@ def augment_data(inputs, labels):
 
     return np.array(new_train), np.array(new_labels)
 
+def augment_images(data, labels):
+    datagen = ImageDataGenerator(
+    featurewise_center=True,
+    featurewise_std_normalization=True,
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    horizontal_flip=True,)
+    # compute quantities required for featurewise normalization
+    # (std, mean, and principal components if ZCA whitening is applied)
+    datagen.fit(data)
+    # fits the model on batches with real-time data augmentation:
+    aug_images = datagen.flow((data,labels), batch_size=1)
+
+    images = []
+    labels = []
+    for image in aug_images:
+        if len(images) == 100000:
+            break
+        images.append(image[0])
+        labels.append(image[1])
+
+    images = np.array(images).reshape(-1,32,32,3)
+    labels = np.array(labels).reshape(-1,10)
+
+    return images,labels
+
 if __name__ == '__main__':
     x_train, x_test, y_train, y_test = load_data()
 
     num_classes = 10
 
-    x_train, y_train = augment_data(x_train, y_train)
+    x_train, y_train = augment_images(x_train, y_train)
 
     x_train, y_train = prepare_sets(x_train, y_train, num_classes)
     x_test, y_test = prepare_sets(x_test, y_test, num_classes)
