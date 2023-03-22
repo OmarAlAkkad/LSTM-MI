@@ -118,10 +118,10 @@ if __name__ == '__main__':
     x_train, y_train = prepare_sets(x_train, y_train, num_classes)
     x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
-    opt = Adam(learning_rate = 0.01, clipnorm = 10.0)
+    opt = Adam(learning_rate = 0.0001)
 
-    model = build_model(10, 32, 32, 60)
-    model.compile(loss='categorical_crossentropy',optimizer= 'adam' ,metrics=['accuracy'])
+    model = build_model(10, 32, 32, 30)
+    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
 
     checkpoint_path = "training_target/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)
@@ -131,7 +131,7 @@ if __name__ == '__main__':
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    history=model.fit(x_train,y_train,batch_size=60,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    history=model.fit(x_train,y_train,batch_size=30,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     # save weights to disk
 
