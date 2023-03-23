@@ -33,6 +33,31 @@ def load_data():
 
     return x_train, x_test, y_train, y_test
 
+def load_augmented_data():
+    data_file = open('cifar_target_x_train.p', 'rb')
+    x_train = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('cifar_target_x_test.p', 'rb')
+    x_test = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('cifar_target_y_train.p', 'rb')
+    y_train = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('cifar_target_y_test.p', 'rb')
+    y_test = pickle.load(data_file)
+    data_file.close()
+
+    x_test = x_test.astype('float32') /255.0
+    x_test = x_test.reshape(-1,32,32,3)
+
+    y_train = tf.keras.utils.to_categorical(y_train, 10)
+    y_test = tf.keras.utils.to_categorical(y_test, 10)
+
+    return x_train, x_test, y_train, y_test
+
 def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
     #convert inputs to float type and normalize to to range 0,1
@@ -133,19 +158,20 @@ def augment_images(data, labels, number_of_classes):
 
     images = np.array(images).reshape(-1,32,32,3)
     labels = np.array(labels).reshape(-1,1)
-    
+
     labels = tf.keras.utils.to_categorical(labels, number_of_classes)
 
     return images,labels
 
 if __name__ == '__main__':
-    x_train, x_test, y_train, y_test = load_data()
+    # x_train, x_test, y_train, y_test = load_data()
+    x_train, x_test, y_train, y_test = load_augmented_data()
 
     num_classes = 10
 
-    x_train, y_train = augment_images(x_train, y_train, num_classes)
-    
-    x_test, y_test = prepare_sets(x_test, y_test, num_classes)
+    # x_train, y_train = augment_images(x_train, y_train, num_classes)
+
+    # x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
     opt = Adam(learning_rate = 0.0001)
 
