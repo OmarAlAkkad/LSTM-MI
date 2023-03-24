@@ -31,6 +31,8 @@ def load_data():
 
     x_train, x_test, y_train, y_test = train_test_split(data, labels, stratify=labels, test_size=0.5, random_state=42)
 
+    y_train = tf.keras.utils.to_categorical(y_train, 10)
+
     return x_train, x_test, y_train, y_test
 
 def load_augmented_data():
@@ -164,14 +166,14 @@ def augment_images(data, labels, number_of_classes):
     return images,labels
 
 if __name__ == '__main__':
-    # x_train, x_test, y_train, y_test = load_data()
-    x_train, x_test, y_train, y_test = load_augmented_data()
+    x_train, x_test, y_train, y_test = load_data()
+    # x_train, x_test, y_train, y_test = load_augmented_data()
 
     num_classes = 10
 
     # x_train, y_train = augment_images(x_train, y_train, num_classes)
 
-    # x_test, y_test = prepare_sets(x_test, y_test, num_classes)
+    x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
     opt = Adam(learning_rate = 0.0001)
 
@@ -186,7 +188,30 @@ if __name__ == '__main__':
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    history=model.fit(x_train,y_train,batch_size=30,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    datagen = ImageDataGenerator(
+    featurewise_center=True,
+    rescale=1.0/255.0,
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    horizontal_flip=True,)
+    # compute quantities required for featurewise normalization
+    # (std, mean, and principal components if ZCA whitening is applied)
+    datagen.fit(x_train)
+
+    # epochs = 100
+    # for e in range(epochs):
+    #     print('Epoch', e)
+    #     batches = 0
+    #     for x_batch, y_batch in datagen.flow(x_train, y_train, batch_size=30):
+    #         history = model.fit(x_batch, y_batch, callbacks=[cp_callback])
+    #         batches += 1
+    #         if batches >= len(x_train) / 30:
+    #             # we need to break the loop by hand because
+    #             # the generator loops indefinitely
+    #             break
+
+    history=model.fit(datagen.flow(x_train, y_train, batch_size=30)[0][0],datagen.flow(x_train, y_train, batch_size=30)[0][1], steps_per_epoch=len(x_train) / 30, batch_size=30,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     # save weights to disk
 
