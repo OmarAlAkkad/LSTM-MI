@@ -60,6 +60,25 @@ def load_augmented_data():
 
     return x_train, x_test, y_train, y_test
 
+def load_split_data():
+    data_file = open('target_train_inputs.p', 'rb')
+    x_train = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('target_test_inputs.p', 'rb')
+    x_test = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('target_train_labels.p', 'rb')
+    y_train = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('target_test_labels.p', 'rb')
+    y_test = pickle.load(data_file)
+    data_file.close()
+
+    return x_train, x_test, y_train, y_test
+
 def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
     #convert inputs to float type and normalize to to range 0,1
@@ -166,18 +185,19 @@ def augment_images(data, labels, number_of_classes):
     return images,labels
 
 if __name__ == '__main__':
-    x_train, x_test, y_train, y_test = load_data()
+    # x_train, x_test, y_train, y_test = load_data()
+    x_train, x_test, y_train, y_test = load_split_data()
     # x_train, x_test, y_train, y_test = load_augmented_data()
 
     num_classes = 10
 
     # x_train, y_train = augment_images(x_train, y_train, num_classes)
-
+    x_train, y_train = prepare_sets(x_train, y_train, num_classes)
     x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
     opt = Adam(learning_rate = 0.0001)
 
-    model = build_model(10, 32, 32, 30)
+    model = build_model(10, 32, 32, 25)
     model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
 
     checkpoint_path = "training_target/cp.ckpt"
@@ -185,19 +205,19 @@ if __name__ == '__main__':
 
     # Create a callback that saves the model's weights
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
-                                                     save_weights_only=True,
-                                                     verbose=1)
+                                                      save_weights_only=True,
+                                                      verbose=1)
 
-    datagen = ImageDataGenerator(
-    featurewise_center=True,
-    rescale=1.0/255.0,
-    rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    horizontal_flip=True,)
-    # compute quantities required for featurewise normalization
-    # (std, mean, and principal components if ZCA whitening is applied)
-    datagen.fit(x_train)
+    # datagen = ImageDataGenerator(
+    # featurewise_center=True,
+    # rescale=1.0/255.0,
+    # rotation_range=20,
+    # width_shift_range=0.2,
+    # height_shift_range=0.2,
+    # horizontal_flip=True,)
+    # # compute quantities required for featurewise normalization
+    # # (std, mean, and principal components if ZCA whitening is applied)
+    # datagen.fit(x_train)
 
     # epochs = 100
     # for e in range(epochs):
@@ -211,7 +231,7 @@ if __name__ == '__main__':
     #             # the generator loops indefinitely
     #             break
 
-    history=model.fit(datagen.flow(x_train, y_train, batch_size=30)[0][0],datagen.flow(x_train, y_train, batch_size=30)[0][1], steps_per_epoch=len(x_train) / 30, batch_size=30,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    history=model.fit(x_train,y_train, batch_size=25 ,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     # save weights to disk
 
