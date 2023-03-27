@@ -67,7 +67,7 @@ target_transform = Compose([
 
 ])
 
-batch_size = 1
+batch_size = 100
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform = input_transform)
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(renet.parameters(), lr=0.001)
 
-    for epoch in range(100):
+    for epoch in range(10):
         print('epoch:', epoch)
 
         running_loss = 0.0
@@ -311,20 +311,27 @@ if __name__ == "__main__":
             if i % eval_every == eval_every-1:    # print every 50 mini-batches
                 print('[%d, %5d] loss: %.3f time: %s' % (epoch + 1, i + 1, running_loss/(i + 1), timeSince(start)))
                 print("train accuracy", train_accur)
+        for test_data in testloader:
+            test_images, test_labels = test_data
+            if args.cuda:
+                test_images, test_labels = test_images.cuda(), test_labels.cuda()
+            # calculate outputs by running images through the network
+            outputs = renet(test_images)
+            # the class with the highest energy is what we choose as prediction
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+        print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
+
 
     PATH = './cifar_renet.pth'
     torch.save(renet.state_dict(), PATH)
 
-    dataiter = iter(testloader)
-    images, labels = next(dataiter)
+    renet_test = ReNet(args.cuda,receptive_filter_size, hidden_size, batch_size, image_size_w/receptive_filter_size, image_size_h/receptive_filter_size)
+    if args.cuda:
+        renet_test.cuda()
 
-    net = renet()
-    net.load_state_dict(torch.load(PATH))
-
-    outputs = net(images)
-
-    _, predicted = torch.max(outputs, 1)
-
+    renet_test.load_state_dict(torch.load(PATH))
 
     correct = 0
     total = 0
@@ -332,8 +339,10 @@ if __name__ == "__main__":
     with torch.no_grad():
         for data in testloader:
             images, labels = data
+            if args.cuda:
+                images, labels = images.cuda(), labels.cuda()
             # calculate outputs by running images through the network
-            outputs = net(images)
+            outputs = renet_test(images)
             # the class with the highest energy is what we choose as prediction
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
