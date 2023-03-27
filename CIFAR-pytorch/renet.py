@@ -40,7 +40,7 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 
 args = parser.parse_args()
 #args.cuda = not args.no_cuda and torch.cuda.is_available()
-args.cuda = False
+args.cuda = True
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
@@ -67,7 +67,7 @@ target_transform = Compose([
 
 ])
 
-batch_size = 64
+batch_size = 1
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform = input_transform)
@@ -85,7 +85,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size = batch_size,
 
 # renet with one layer
 class ReNet(nn.Module):
-    def __init__(self, receptive_filter_size, hidden_size, batch_size, image_patches_height, image_patches_width):
+    def __init__(self, cuda, receptive_filter_size, hidden_size, batch_size, image_patches_height, image_patches_width):
 
         super(ReNet, self).__init__()
 
@@ -103,7 +103,7 @@ class ReNet(nn.Module):
         self.rnn3 = nn.LSTM(self.input_size2, self.hidden_size, dropout = 0.2)
         self.rnn4 = nn.LSTM(self.input_size2, self.hidden_size, dropout = 0.2)
 
-        self.initHidden()
+        self.initHidden(cuda)
 
         feature_map_dim = int(image_patches_height*image_patches_height*hidden_size*2)
         self.conv1 = nn.Conv2d(hidden_size*2, 2, 3,padding=1)#[1,640,8,8]->[1,1,8,8]
@@ -113,8 +113,11 @@ class ReNet(nn.Module):
 
         self.log_softmax = nn.LogSoftmax()
 
-    def initHidden(self):
-        self.hidden = (Variable(torch.zeros(1, self.batch_size, self.hidden_size)), Variable(torch.zeros(1, self.batch_size, self.hidden_size)))
+    def initHidden(self, cuda):
+        if cuda:
+            self.hidden = ((torch.zeros(1, self.batch_size, self.hidden_size)).cuda(), (torch.zeros(1, self.batch_size, self.hidden_size)).cuda())
+        else:
+            self.hidden = ((torch.zeros(1, self.batch_size, self.hidden_size)), (torch.zeros(1, self.batch_size, self.hidden_size)))
 
 
     def get_image_patches(self, X, receptive_filter_size):
@@ -260,13 +263,13 @@ def timeSince(since):
 
 if __name__ == "__main__":
 
-    renet = ReNet(receptive_filter_size, hidden_size, batch_size, image_size_w/receptive_filter_size, image_size_h/receptive_filter_size)
+    renet = ReNet(args.cuda,receptive_filter_size, hidden_size, batch_size, image_size_w/receptive_filter_size, image_size_h/receptive_filter_size)
     if args.cuda:
         renet.cuda()
 
 	#criterion = nn.CrossEntropyLoss().cuda()
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(renet.parameters(), lr=0.001, momentum = 0.9)
+    optimizer = optim.Adam(renet.parameters(), lr=0.001)
 
     for epoch in range(100):
         print('epoch:', epoch)
@@ -287,9 +290,9 @@ if __name__ == "__main__":
 			# # zero the parameter gradients
             optimizer.zero_grad()
 			# # forward + backward + optimize
-            renet.initHidden()
+            renet.initHidden(args.cuda)
             renet.train()
-            logits = renet(inputs)
+            logits = renet(inputs).to(device)
             loss = criterion(logits, labels)
             loss.backward()
             optimizer.step()
@@ -302,7 +305,7 @@ if __name__ == "__main__":
             train_accur = correct / total * 100
 
 
-            eval_every = 1
+            eval_every = 10
 
 			# print necessary info
             if i % eval_every == eval_every-1:    # print every 50 mini-batches
