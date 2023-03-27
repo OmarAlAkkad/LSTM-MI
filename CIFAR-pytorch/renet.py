@@ -311,17 +311,20 @@ if __name__ == "__main__":
             if i % eval_every == eval_every-1:    # print every 50 mini-batches
                 print('[%d, %5d] loss: %.3f time: %s' % (epoch + 1, i + 1, running_loss/(i + 1), timeSince(start)))
                 print("train accuracy", train_accur)
+
+        test_correct = 0
+        test_total = 0
         for test_data in testloader:
             test_images, test_labels = test_data
             if args.cuda:
                 test_images, test_labels = test_images.cuda(), test_labels.cuda()
             # calculate outputs by running images through the network
-            outputs = renet(test_images)
+            test_outputs = renet(test_images)
             # the class with the highest energy is what we choose as prediction
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-        print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
+            _, test_predicted = torch.max(test_outputs.data, 1)
+            test_total += test_labels.size(0)
+            test_correct += (test_predicted == test_labels).sum().item()
+        print(f'Accuracy of the network on the 10000 test images: {100 * test_correct // test_total} %')
 
 
     PATH = './cifar_renet.pth'
