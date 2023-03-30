@@ -37,6 +37,7 @@ class build_model(keras.Model):
         renet1 = self.dropout(renet1)
         renet2 = self.renet_module2(renet1)
         renet2 = self.dropout(renet2)
+
         #conv = self.conv(renet)
         #upsample = self.upsample(conv)
         flattened = self.flatten(renet2)
@@ -46,3 +47,12 @@ class build_model(keras.Model):
         outputs = self.outputlayer(dense1)
 
         return outputs
+
+    def lstm(self, inputs):
+        renet = self.renet_module(inputs)
+        renet = self.dropout(renet)
+        renet1 = self.renet_module1(renet)
+        renet1 = self.dropout(renet1)
+        renet2 = self.renet_module2(renet1)
+
+        return renet2

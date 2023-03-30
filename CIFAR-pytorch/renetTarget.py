@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar 28 00:48:50 2023
+
+@author: omars
+"""
 #coding:utf-8
 import torch
 import torchvision
@@ -12,6 +18,7 @@ from torch.autograd import gradcheck
 import time
 import math
 import argparse
+import pickle
 
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, CenterCrop, Normalize, Resize, Pad
@@ -53,34 +60,7 @@ receptive_filter_size = 4
 hidden_size = 320
 image_size_w = 32
 image_size_h = 32
-
-
-input_transform = Compose([
-    Resize((32,32)),
-    ToTensor(),
-    Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
-target_transform = Compose([
-    # Resize((32,32)),
-
-    ToLabel(),
-
-])
-
-batch_size = 100
-
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                        download=True, transform = input_transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                          shuffle=True, num_workers=2)
-# trainloader = DataLoader(train(input_transform, target_transform),num_workers=1, batch_size=1, shuffle=True)
-# testloader = DataLoader(train(input_transform, target_transform),num_workers=1, batch_size=1, shuffle=True)
-testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                      download=True, transform = input_transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size = batch_size,
-                                        shuffle=False, num_workers=2)
-
-
+batch_size = 50
 
 
 # renet with one layer
@@ -259,9 +239,32 @@ def timeSince(since):
     s = '%s' % (asMinutes(s))
     return s
 
+def load_data():
+    data_file = open('target_dataset.p', 'rb')
+    target_dataset = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('test_dataset.p', 'rb')
+    test_dataset = pickle.load(data_file)
+    data_file.close()
+
+    return target_dataset, test_dataset
+
 
 
 if __name__ == "__main__":
+
+    target_dataset, test_dataset = load_data()
+
+    transform = transforms.Compose(
+        [transforms.ToTensor(),
+         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    trainloader = torch.utils.data.DataLoader(target_dataset, batch_size=batch_size,
+                                              shuffle=True, num_workers=2)
+
+    testloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
+                                             shuffle=False, num_workers=2)
 
     renet = ReNet(args.cuda,receptive_filter_size, hidden_size, batch_size, image_size_w/receptive_filter_size, image_size_h/receptive_filter_size)
     if args.cuda:
@@ -272,7 +275,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(renet.parameters(), lr=0.001)
     # optimizer = optim.SGD(renet.parameters(), lr=0.01, momentum = 0.5)
 
-    for epoch in range(10):
+    for epoch in range(100):
         print('epoch:', epoch)
 
         running_loss = 0.0

@@ -53,6 +53,9 @@ def create_model(input_shape):
     model.add(BatchNormalization())
     #model.add(Dropout(0.2))
     model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(100, activation='relu'))
     model.add(Dense(2, activation='softmax')) #output layer with softmax activation function to get predictions vector

@@ -12,7 +12,21 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import pickle
+from sklearn.model_selection import train_test_split
 
+def load_data():
+    data_file = open('cifar_target_data.p', 'rb')
+    data = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('cifar_target_labels.p', 'rb')
+    labels = pickle.load(data_file)
+    data_file.close()
+
+    x_train, x_test, y_train, y_test = train_test_split(data, labels, stratify=labels, test_size=0.5, random_state=42)
+
+    return x_train, x_test, y_train, y_test
 
 def imshow(img):
     img = img / 2 + 0.5     # unnormalize
@@ -45,7 +59,7 @@ if __name__ == "__main__":
         [transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    batch_size = 4
+    batch_size = 50
 
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)
@@ -55,6 +69,13 @@ if __name__ == "__main__":
     testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                            download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
+                                             shuffle=False, num_workers=2)
+
+
+    x_train, x_test, y_train, y_test = train_test_split(trainset.data, trainset.targets, stratify=trainset.targets, test_size=0.5, random_state=42)
+    x_train, x_test, y_train, y_test = torch.from_numpy(x_train), torch.from_numpy(x_test), torch.Tensor(y_train), torch.Tensor(y_test)
+    train = torch.utils.data.TensorDataset(x_train, y_train)
+    testloader = torch.utils.data.DataLoader(train, batch_size=batch_size,
                                              shuffle=False, num_workers=2)
 
     classes = ('plane', 'car', 'bird', 'cat',

@@ -195,12 +195,12 @@ if __name__ == '__main__':
     x_train, y_train = prepare_sets(x_train, y_train, num_classes)
     x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
-    opt = Adam(learning_rate = 0.0001)
+    opt = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon = 0.1)
 
-    model = build_model(10, 32, 32, 25)
+    model = build_model(10, 32, 32, 5)
     model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
 
-    checkpoint_path = "training_target/cp.ckpt"
+    checkpoint_path = "training_target1/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)
 
     # Create a callback that saves the model's weights
@@ -208,30 +208,7 @@ if __name__ == '__main__':
                                                       save_weights_only=True,
                                                       verbose=1)
 
-    # datagen = ImageDataGenerator(
-    # featurewise_center=True,
-    # rescale=1.0/255.0,
-    # rotation_range=20,
-    # width_shift_range=0.2,
-    # height_shift_range=0.2,
-    # horizontal_flip=True,)
-    # # compute quantities required for featurewise normalization
-    # # (std, mean, and principal components if ZCA whitening is applied)
-    # datagen.fit(x_train)
-
-    # epochs = 100
-    # for e in range(epochs):
-    #     print('Epoch', e)
-    #     batches = 0
-    #     for x_batch, y_batch in datagen.flow(x_train, y_train, batch_size=30):
-    #         history = model.fit(x_batch, y_batch, callbacks=[cp_callback])
-    #         batches += 1
-    #         if batches >= len(x_train) / 30:
-    #             # we need to break the loop by hand because
-    #             # the generator loops indefinitely
-    #             break
-
-    history=model.fit(x_train,y_train, batch_size=25 ,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    history=model.fit(x_train,y_train, batch_size=5 ,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     # save weights to disk
 
