@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
+from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix, accuracy_score
 import random
 import keras.backend as K
 from sklearn.preprocessing import StandardScaler
@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     opt = Adam(learning_rate = 0.0001)
 
-    model = build_model(10, 32, 32, 25)
+    model = build_model(10, 32, 32, 5)
     model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
 
     checkpoint_path = "training_shadow/cp.ckpt"
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     #             # the generator loops indefinitely
     #             break
 
-    history=model.fit(x_train,y_train, batch_size=25 ,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
+    history=model.fit(x_train,y_train, batch_size=5 ,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     # save weights to disk
 

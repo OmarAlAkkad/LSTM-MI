@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
+from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix, accuracy_score
 import random
 import keras.backend as K
 from sklearn.preprocessing import StandardScaler
