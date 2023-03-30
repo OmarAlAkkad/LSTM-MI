@@ -39,6 +39,91 @@ def load_data(data_type):
 
     return x_train, x_test, y_train, y_test
 
+def test_on_other_data():
+    data_file = open('testing_images.p', 'rb')
+    testing_images = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('testing_labels.p', 'rb')
+    testing_labels = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('testing_images1.p', 'rb')
+    testing_images1 = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('testing_labels1.p', 'rb')
+    testing_labels1 = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('testing_images2.p', 'rb')
+    testing_images2 = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open('testing_labels2.p', 'rb')
+    testing_labels2 = pickle.load(data_file)
+    data_file.close()
+
+    model = load_model(data)
+
+    x_train, y_train = prepare_sets(testing_images, testing_labels, num_classes)
+
+    train_predictions = np.empty(0, dtype="float32")
+
+    for x in range(len(x_train)):
+        train_predictions = np.append(train_predictions, np.array(K.eval(model.predict(np.expand_dims(x_train[x], axis=0)))))
+
+    train_predictions = train_predictions.reshape(-1,num_classes)
+
+    train_predictions_labels = []
+    for pred in train_predictions:
+        train_predictions_labels.append(np.argmax(pred, axis=0))
+
+    y_train_label = []
+    for pred in y_train:
+        y_train_label.append(np.argmax(pred, axis=0))
+
+    print("accuracy of testing set 0:",accuracy_score(y_train_label, train_predictions_labels))
+
+    x_train, y_train = prepare_sets(testing_images1, testing_labels1, num_classes)
+
+    train_predictions = np.empty(0, dtype="float32")
+
+    for x in range(len(x_train)):
+        train_predictions = np.append(train_predictions, np.array(K.eval(model.predict(np.expand_dims(x_train[x], axis=0)))))
+
+    train_predictions = train_predictions.reshape(-1,num_classes)
+
+    train_predictions_labels = []
+    for pred in train_predictions:
+        train_predictions_labels.append(np.argmax(pred, axis=0))
+
+    y_train_label = []
+    for pred in y_train:
+        y_train_label.append(np.argmax(pred, axis=0))
+
+    print("accuracy of testing set 1:",accuracy_score(y_train_label, train_predictions_labels))
+
+    x_train, y_train = prepare_sets(testing_images2, testing_labels2, num_classes)
+
+    train_predictions = np.empty(0, dtype="float32")
+
+    for x in range(len(x_train)):
+        train_predictions = np.append(train_predictions, np.array(K.eval(model.predict(np.expand_dims(x_train[x], axis=0)))))
+
+    train_predictions = train_predictions.reshape(-1,num_classes)
+
+    train_predictions_labels = []
+    for pred in train_predictions:
+        train_predictions_labels.append(np.argmax(pred, axis=0))
+
+    y_train_label = []
+    for pred in y_train:
+        y_train_label.append(np.argmax(pred, axis=0))
+
+    print("accuracy of testing set 2:",accuracy_score(y_train_label, train_predictions_labels))
+
+
 def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
     #convert inputs to float type and normalize to to range 0,1
@@ -175,3 +260,5 @@ if __name__ == '__main__':
          'F1 Score': F1_Score,
          })
     d.to_csv(f'{data}_renet_cifar.csv')
+
+    test_on_other_data()
