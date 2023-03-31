@@ -148,69 +148,37 @@ def load_model(data_type):
 
     return model
 
-if __name__ == '__main__':
-    data = 'shadow'
-    x_train, x_test, y_train, y_test = load_data(data)
+def get_prediction_vectors(num_classes, model, data, labels):
+    predictions = np.empty(0, dtype="float32")
 
-    num_classes = 10
+    for x in range(len(data)):
+        predictions = np.append(predictions, np.array(K.eval(model.predict(np.expand_dims(data[x], axis=0)))))
 
-    # x_train, y_train = augment_images(x_train, y_train, num_classes)
-    x_train, y_train = prepare_sets(x_train, y_train, num_classes)
-    x_test, y_test = prepare_sets(x_test, y_test, num_classes)
+    predictions = predictions.reshape(-1,num_classes)
 
-    model = load_model(data)
+    predictions_labels = []
+    for pred in predictions:
+        predictions_labels.append(np.argmax(pred, axis=0))
 
-    train_predictions = np.empty(0, dtype="float32")
-    test_predictions = np.empty(0, dtype= 'float32')
+    y_label = []
+    for pred in labels:
+        y_label.append(np.argmax(pred, axis=0))
 
-    for x in range(len(x_train)):
-        train_predictions = np.append(train_predictions, np.array(K.eval(model.predict(np.expand_dims(x_train[x], axis=0)))))
+    return predictions, predictions_labels, y_label
 
-    for x in range(len(x_test)):
-        test_predictions = np.append(test_predictions, np.array(K.eval(model.predict(np.expand_dims(x_test[x], axis=0)))))
+def prepare_dataframe(inputs,all_labels,predictions,losses,labels,label = 1,include_losses = True, include_labels = True):
 
-    train_predictions = train_predictions.reshape(-1,num_classes)
-    test_predictions = test_predictions.reshape(-1,num_classes)
+    for i in range(len(predictions)):
+        if include_losses:
+            predictions[i].append(losses[i])
+        if include_labels:
+            predictions[i].append(labels[i])
+        inputs.append(predictions[i])
+        all_labels.append(label)
 
-    train_predictions_labels = []
-    for pred in train_predictions:
-        train_predictions_labels.append(np.argmax(pred, axis=0))
+    return inputs, all_labels
 
-    test_predictions_labels = []
-    for pred in test_predictions:
-        test_predictions_labels.append(np.argmax(pred, axis=0))
-
-    y_train_label = []
-    for pred in y_train:
-        y_train_label.append(np.argmax(pred, axis=0))
-
-    y_test_label = []
-    for pred in y_test:
-        y_test_label.append(np.argmax(pred, axis=0))
-
-    train_losses = tf.keras.backend.categorical_crossentropy(y_train, train_predictions).numpy()
-    test_losses = tf.keras.backend.categorical_crossentropy(y_test, test_predictions).numpy()
-
-    train_predictions_list = train_predictions.tolist()
-    test_predictions_list = test_predictions.tolist()
-
-    inputs = []
-    all_labels = []
-    attention_weights = []
-
-    for i in range(len(train_predictions)):
-        # if train_predictions_labels[i] == y_train_label[i]:
-            train_predictions_list[i].append(train_losses[i])
-            train_predictions_list[i].append(y_train_label[i])
-            inputs.append(train_predictions_list[i])
-            all_labels.append(1)
-    for i in range(len(test_predictions)):
-        # if test_predictions_labels[i] == y_test_label[i]:
-            test_predictions_list[i].append(test_losses[i])
-            test_predictions_list[i].append(y_test_label[i])
-            inputs.append(test_predictions_list[i])
-            all_labels.append(0)
-
+def create_dataframe(data, inputs, all_labels):
     temp = list(zip(inputs, all_labels))
     random.shuffle(temp)
     inputs, all_labels = zip(*temp)
@@ -223,6 +191,9 @@ if __name__ == '__main__':
 
     pickle.dump(locals()[f'{data}_renet_dataframe_cifar'], open(f'{data}_renet_dataframe_cifar.p', 'wb'))
 
+    return locals()[f'{data}_renet_dataframe_cifar']
+
+def create_statistics_dataframe(train_predictions_labels, y_train_label, test_predictions_labels, y_test_label):
     sets = ["train", "test"]
     models = []
     Accuracy = []
@@ -260,5 +231,39 @@ if __name__ == '__main__':
          'F1 Score': F1_Score,
          })
     d.to_csv(f'{data}_renet_cifar.csv')
+
+    return d
+
+if __name__ == '__main__':
+    data = 'shadow'
+    x_train, x_test, y_train, y_test = load_data(data)
+
+    num_classes = 10
+
+    # x_train, y_train = augment_images(x_train, y_train, num_classes)
+    x_train, y_train = prepare_sets(x_train, y_train, num_classes)
+    x_test, y_test = prepare_sets(x_test, y_test, num_classes)
+
+    model = load_model(data)
+
+    train_predictions, train_predictions_labels, y_train_label = get_prediction_vectors(num_classes,model,x_train, y_train)
+    test_predictions, test_predictions_labels, y_test_label = get_prediction_vectors(num_classes,model, x_test, y_test)
+
+    train_losses = tf.keras.backend.categorical_crossentropy(y_train, train_predictions).numpy()
+    test_losses = tf.keras.backend.categorical_crossentropy(y_test, test_predictions).numpy()
+
+    train_predictions_list = train_predictions.tolist()
+    test_predictions_list = test_predictions.tolist()
+
+    inputs = []
+    all_labels = []
+
+    inputs, all_labels = prepare_dataframe(inputs,all_labels,train_predictions_list,train_losses,y_train_label,label = 1,include_losses = False, include_labels = True)
+    inputs, all_labels = prepare_dataframe(inputs,all_labels,test_predictions_list,test_losses,y_test_label,label = 0,include_losses = True, include_labels = True)
+
+    locals()[f'{data}_renet_dataframe_cifar'] = create_dataframe(data, inputs, all_labels)
+
+    d = create_statistics_dataframe(train_predictions_labels, y_train_label, test_predictions_labels, y_test_label)
+
 
     test_on_other_data()
