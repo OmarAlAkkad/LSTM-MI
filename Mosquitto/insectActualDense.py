@@ -13,6 +13,7 @@ from tensorflow.keras.layers import Conv1D, MaxPool1D, Dense, Flatten, Dropout, 
 import matplotlib.pyplot as plt
 import pandas as pd
 import random
+from tensorflow.keras.optimizers import Adam, SGD
 from sklearn.model_selection import train_test_split
 import keras
 from keras import models, layers
@@ -66,6 +67,7 @@ def build_model(train, input_shape, num_classes):
     model.add(Dense(32, activation = 'sigmoid'))
     model.add(Dense(16, activation = 'sigmoid'))
     model.add(Dense(num_classes, activation = 'softmax'))
+    opt = Adam(lr = 0.001)
     model.compile(optimizer = 'adam', loss = 'categorical_crossentropy',  metrics=['accuracy'])
 
     return model
@@ -143,7 +145,7 @@ if __name__ == "__main__":
     test_accuracy = score[1]
 
 
-    model.save('target_insect')
+    model.save('target_insect_dense')
 
     train_predictions = model.predict(x_train)
     test_predictions = model.predict(x_test)
@@ -194,9 +196,9 @@ if __name__ == "__main__":
         'Inputs': inputs ,
         'Labels': all_labels
         }
-    locals()['target_model_dataframe_insect'] = pd.DataFrame(data=d)
+    locals()['target_model_dataframe_insect_dense'] = pd.DataFrame(data=d)
 
-    pickle.dump(locals()['target_model_dataframe_insect'], open('target_model_dataframe_insect.p', 'wb'))
+    pickle.dump(locals()['target_model_dataframe_insect_dense'], open('target_model_dataframe_insect_dense.p', 'wb'))
 
     sets = ["train", "test"]
     models = []
@@ -233,7 +235,7 @@ if __name__ == "__main__":
           'Negative Recall': Negative_Recall,
           'F1 Score': F1_Score,
           })
-    d.to_csv(f'target_insect.csv')
+    d.to_csv(f'target_insect_dense.csv')
 
     # plot_data(history)
 

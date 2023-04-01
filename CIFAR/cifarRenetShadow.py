@@ -208,29 +208,6 @@ if __name__ == '__main__':
                                                       save_weights_only=True,
                                                       verbose=1)
 
-    # datagen = ImageDataGenerator(
-    # featurewise_center=True,
-    # rescale=1.0/255.0,
-    # rotation_range=20,
-    # width_shift_range=0.2,
-    # height_shift_range=0.2,
-    # horizontal_flip=True,)
-    # # compute quantities required for featurewise normalization
-    # # (std, mean, and principal components if ZCA whitening is applied)
-    # datagen.fit(x_train)
-
-    # epochs = 100
-    # for e in range(epochs):
-    #     print('Epoch', e)
-    #     batches = 0
-    #     for x_batch, y_batch in datagen.flow(x_train, y_train, batch_size=30):
-    #         history = model.fit(x_batch, y_batch, callbacks=[cp_callback])
-    #         batches += 1
-    #         if batches >= len(x_train) / 30:
-    #             # we need to break the loop by hand because
-    #             # the generator loops indefinitely
-    #             break
-
     history=model.fit(x_train,y_train, batch_size=5 ,epochs=100,validation_data = (x_test, y_test), callbacks=[cp_callback])
 
     print('Train loss:', history.history['loss'])

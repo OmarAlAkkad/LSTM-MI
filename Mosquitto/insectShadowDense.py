@@ -21,6 +21,7 @@ import pandas as pd
 import random
 from sklearn.model_selection import train_test_split
 import keras
+from tensorflow.keras.optimizers import Adam, SGD
 from keras import models, layers
 from keras import backend
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
@@ -72,6 +73,7 @@ def build_model(train, input_shape, num_classes):
     model.add(Dense(32, activation = 'sigmoid'))
     model.add(Dense(16, activation = 'sigmoid'))
     model.add(Dense(num_classes, activation = 'softmax'))
+    opt = Adam(lr = 0.001)
     model.compile(optimizer = 'adam', loss = 'categorical_crossentropy',  metrics=['accuracy'])
 
     return model
@@ -149,7 +151,7 @@ if __name__ == "__main__":
     test_accuracy = score[1]
 
 
-    model.save('shadow_insect')
+    model.save('shadow_insect_dense')
 
     train_predictions = model.predict(x_train)
     test_predictions = model.predict(x_test)
@@ -200,9 +202,9 @@ if __name__ == "__main__":
         'Inputs': inputs ,
         'Labels': all_labels
         }
-    locals()['shadow_model_dataframe_insect'] = pd.DataFrame(data=d)
+    locals()['shadow_model_dataframe_insect_dense'] = pd.DataFrame(data=d)
 
-    pickle.dump(locals()['shadow_model_dataframe_insect'], open('shadow_model_dataframe_insect.p', 'wb'))
+    pickle.dump(locals()['shadow_model_dataframe_insect_dense'], open('shadow_model_dataframe_insect_dense.p', 'wb'))
 
     sets = ["train", "test"]
     models = []
@@ -239,7 +241,7 @@ if __name__ == "__main__":
           'Negative Recall': Negative_Recall,
           'F1 Score': F1_Score,
           })
-    d.to_csv(f'shadow_insect.csv')
+    d.to_csv(f'shadow_insect_dense.csv')
 
     # plot_data(history)
 

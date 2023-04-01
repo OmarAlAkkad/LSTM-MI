@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import random
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.optimizers import Adam, SGD
 from Grid import *
 import keras
 from keras import models, layers
@@ -81,9 +82,9 @@ def build_model(train, input_shape, num_classes):
     model.add(Dense(64, activation = 'relu'))
     # model.add(layers.Dropout(0.5))
     model.add(layers.Dense(num_classes, activation='softmax'))
-
+    opt = Adam(learning_rate = 0.001)
     model.compile(loss=keras.losses.categorical_crossentropy,
-                     optimizer='adam',
+                     optimizer=opt,
                      metrics=['accuracy'])
 
     return model
@@ -190,7 +191,7 @@ if __name__ == "__main__":
     test_accuracy = score[1]
 
 
-    model.save('shadow_insect')
+    model.save('shadow_insect_lstm')
 
     train_predictions = model.predict(x_train)
     test_predictions = model.predict(x_test)
@@ -241,9 +242,9 @@ if __name__ == "__main__":
         'Inputs': inputs ,
         'Labels': all_labels
         }
-    locals()['shadow_model_dataframe_insect'] = pd.DataFrame(data=d)
+    locals()['shadow_model_dataframe_insect_lstm'] = pd.DataFrame(data=d)
 
-    pickle.dump(locals()['shadow_model_dataframe_insect'], open('shadow_model_dataframe_insect.p', 'wb'))
+    pickle.dump(locals()['shadow_model_dataframe_insect_lstm'], open('shadow_model_dataframe_insect_lstm.p', 'wb'))
 
     sets = ["train", "test"]
     models = []
@@ -280,7 +281,7 @@ if __name__ == "__main__":
          'Negative Recall': Negative_Recall,
          'F1 Score': F1_Score,
          })
-    d.to_csv(f'shadow_insect.csv')
+    d.to_csv(f'shadow_insect_lstm.csv')
 
     plot_data(history)
 

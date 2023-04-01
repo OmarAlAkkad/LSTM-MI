@@ -12,6 +12,7 @@ from tensorflow.keras.layers import Bidirectional, Conv1D, MaxPool1D, Dense, Fla
 import matplotlib.pyplot as plt
 import pandas as pd
 import random
+from tensorflow.keras.optimizers import Adam, SGD
 from sklearn.model_selection import train_test_split
 from Grid import *
 import keras
@@ -98,7 +99,8 @@ def build_model(train, input_shape, num_classes):
     dense4 = layers.Dense(64, activation="relu")(dense3)
     outputs = layers.Dense(num_classes, activation = 'softmax')(dense4)
     model = keras.Model(inputs=inputs, outputs=outputs, name="target_insect")
-    model.compile(optimizer = 'adam', loss = 'categorical_crossentropy',  metrics=['accuracy'])
+    opt = Adam(lr = 0.0001)
+    model.compile(optimizer = opt, loss = 'categorical_crossentropy',  metrics=['accuracy'])
 
     attention = keras.Model(inputs=inputs,
                                   outputs=model.get_layer("seq_self_attention").output)
@@ -226,7 +228,7 @@ if __name__ == "__main__":
     test_accuracy = score[1]
 
 
-    model.save('target_insect')
+    model.save('target_insect_attention')
 
     train_predictions = model.predict(x_train)
     test_predictions = model.predict(x_test)
@@ -282,9 +284,9 @@ if __name__ == "__main__":
         'Labels': all_labels,
         'Weights': attention_weights
         }
-    locals()['target_model_dataframe_insect'] = pd.DataFrame(data=d)
+    locals()['target_model_dataframe_insect_attention'] = pd.DataFrame(data=d)
 
-    pickle.dump(locals()['target_model_dataframe_insect'], open('target_model_dataframe_insect.p', 'wb'))
+    pickle.dump(locals()['target_model_dataframe_insect_attention'], open('target_model_dataframe_insect_attention.p', 'wb'))
 
     sets = ["train", "test"]
     models = []
@@ -321,7 +323,7 @@ if __name__ == "__main__":
          'Negative Recall': Negative_Recall,
          'F1 Score': F1_Score,
          })
-    d.to_csv(f'target_insect.csv')
+    d.to_csv(f'target_insect_attention.csv')
 
     plot_data(history)
 

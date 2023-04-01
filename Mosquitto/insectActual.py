@@ -9,11 +9,12 @@ import pickle
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv1D, MaxPool1D, Dense, Flatten, Dropout, AveragePooling2D, LSTM, TimeDistributed
+from tensorflow.keras.layers import Conv1D, MaxPool1D, Dense, Flatten, Dropout, AveragePooling2D, LSTM, TimeDistributed, Attention
 import matplotlib.pyplot as plt
 import pandas as pd
 import random
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.optimizers import Adam, SGD
 from Grid import *
 import keras
 from keras import models, layers
@@ -81,9 +82,9 @@ def build_model(train, input_shape, num_classes):
     model.add(Dense(64, activation = 'relu'))
     # model.add(layers.Dropout(0.5))
     model.add(layers.Dense(num_classes, activation='softmax'))
-
+    opt = Adam(learning_rate = 0.001)
     model.compile(loss=keras.losses.categorical_crossentropy,
-                     optimizer='adam',
+                     optimizer=opt,
                      metrics=['accuracy'])
 
     return model
@@ -190,7 +191,7 @@ if __name__ == "__main__":
     test_accuracy = score[1]
 
 
-    model.save('target_insect')
+    model.save('target_insect_lstm')
 
     train_predictions = model.predict(x_train)
     test_predictions = model.predict(x_test)
@@ -241,9 +242,9 @@ if __name__ == "__main__":
         'Inputs': inputs ,
         'Labels': all_labels
         }
-    locals()['target_model_dataframe_insect'] = pd.DataFrame(data=d)
+    locals()['target_model_dataframe_insect_lstm'] = pd.DataFrame(data=d)
 
-    pickle.dump(locals()['target_model_dataframe_insect'], open('target_model_dataframe_insect.p', 'wb'))
+    pickle.dump(locals()['target_model_dataframe_insect_lstm'], open('target_model_dataframe_insect_lstm.p', 'wb'))
 
     sets = ["train", "test"]
     models = []
@@ -280,7 +281,7 @@ if __name__ == "__main__":
          'Negative Recall': Negative_Recall,
          'F1 Score': F1_Score,
          })
-    d.to_csv(f'target_insect.csv')
+    d.to_csv(f'target_insect_lstm.csv')
 
     plot_data(history)
 

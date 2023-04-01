@@ -10,6 +10,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, AveragePooling2D, LSTM, BatchNormalization
 import pandas as pd
+from tensorflow.keras.optimizers import Adam, SGD
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
 
 def load_data():
@@ -67,6 +68,7 @@ def create_model(input_shape, number_of_classes):
     model.add(Dense(100, activation='relu'))
     model.add(Dense(50, activation='relu'))
     model.add(Dense(2, activation='softmax')) #output layer with softmax activation function to get predictions vector
+    opt = Adam(lr = 0.0001)
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model # return the created model
 

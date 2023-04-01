@@ -148,7 +148,7 @@ def load_model(data_type):
 
     return model
 
-def get_prediction_vectors(num_classes, model, data, labels):
+def get_prediction_vectors(set_type,num_classes, model, data, labels):
     predictions = np.empty(0, dtype="float32")
 
     for x in range(len(data)):
@@ -164,15 +164,19 @@ def get_prediction_vectors(num_classes, model, data, labels):
     for pred in labels:
         y_label.append(np.argmax(pred, axis=0))
 
+    pickle.dump(predictions, open(f'{set_type}_predictions_cifar.p', 'wb'))
+
     return predictions, predictions_labels, y_label
 
-def get_lstm_vectors(model, data, num_of_neurons, direction = 0):
+def get_lstm_vectors(set_type,model, data, num_of_neurons, direction = 0):
     lstm = np.empty(0, dtype="float32")
 
     for x in range(len(data)):
         lstm = np.append(lstm, np.array(K.eval(model.lstm(np.expand_dims(data[x], axis=0))))[0][direction][0][:num_of_neurons])
 
     lstm = lstm.reshape(-1,num_of_neurons)
+
+    pickle.dump(lstm, open(f'{set_type}_lstm_cifar.p', 'wb'))
 
     return lstm
 
@@ -247,38 +251,39 @@ def create_statistics_dataframe(train_predictions_labels, y_train_label, test_pr
     return d
 
 if __name__ == '__main__':
-    data = 'shadow'
-    x_train, x_test, y_train, y_test = load_data(data)
+    datas = ['shadow','target']
 
-    num_classes = 10
+    for data in datas:
+        x_train, x_test, y_train, y_test = load_data(data)
 
-    # x_train, y_train = augment_images(x_train, y_train, num_classes)
-    x_train, y_train = prepare_sets(x_train, y_train, num_classes)
-    x_test, y_test = prepare_sets(x_test, y_test, num_classes)
+        num_classes = 10
 
-    model = load_model(data)
+        x_train, y_train = prepare_sets(x_train, y_train, num_classes)
+        x_test, y_test = prepare_sets(x_test, y_test, num_classes)
 
-    train_predictions, train_predictions_labels, y_train_label = get_prediction_vectors(num_classes,model,x_train, y_train)
-    test_predictions, test_predictions_labels, y_test_label = get_prediction_vectors(num_classes,model, x_test, y_test)
+        model = load_model(data)
 
-    train_losses = tf.keras.backend.categorical_crossentropy(y_train, train_predictions).numpy()
-    test_losses = tf.keras.backend.categorical_crossentropy(y_test, test_predictions).numpy()
+        train_predictions, train_predictions_labels, y_train_label = get_prediction_vectors(num_classes,model,x_train, y_train)
+        test_predictions, test_predictions_labels, y_test_label = get_prediction_vectors(num_classes,model, x_test, y_test)
 
-    train_lstm = get_lstm_vectors(model, x_train, num_of_neurons = 1280, direction = 0)
-    test_lstm = get_lstm_vectors(model, x_test, num_of_neurons = 1280, direction = 0)
+        train_losses = tf.keras.backend.categorical_crossentropy(y_train, train_predictions).numpy()
+        test_losses = tf.keras.backend.categorical_crossentropy(y_test, test_predictions).numpy()
 
-    train_predictions_list = train_predictions.tolist()
-    test_predictions_list = test_predictions.tolist()
+        train_lstm = get_lstm_vectors(data, model, x_train, num_of_neurons = 1280, direction = 0)
+        test_lstm = get_lstm_vectors(data, model, x_test, num_of_neurons = 1280, direction = 0)
 
-    inputs = []
-    all_labels = []
+        train_predictions_list = train_predictions.tolist()
+        test_predictions_list = test_predictions.tolist()
 
-    inputs, all_labels = prepare_dataframe(inputs,all_labels,train_predictions_list,train_losses,train_lstm,y_train_label,label = 1,include_losses = True, include_labels = True,include_lstm=True)
-    inputs, all_labels = prepare_dataframe(inputs,all_labels,test_predictions_list,test_losses,test_lstm,y_test_label,label = 0,include_losses = True, include_labels = True,include_lstm=True)
+        inputs = []
+        all_labels = []
 
-    locals()[f'{data}_renet_dataframe_cifar'] = create_dataframe(data, inputs, all_labels)
+        inputs, all_labels = prepare_dataframe(inputs,all_labels,train_predictions_list,train_losses,train_lstm,y_train_label,label = 1,include_losses = True, include_labels = True,include_lstm=True)
+        inputs, all_labels = prepare_dataframe(inputs,all_labels,test_predictions_list,test_losses,test_lstm,y_test_label,label = 0,include_losses = True, include_labels = True,include_lstm=True)
 
-    d = create_statistics_dataframe(train_predictions_labels, y_train_label, test_predictions_labels, y_test_label)
+        locals()[f'{data}_renet_dataframe_cifar'] = create_dataframe(data, inputs, all_labels)
+
+        d = create_statistics_dataframe(train_predictions_labels, y_train_label, test_predictions_labels, y_test_label)
 
 
-    test_on_other_data()
+    # test_on_other_data()

@@ -106,7 +106,7 @@ if __name__ == "__main__":
     model.summary()
 
     batch_size = 100
-    epochs = 10
+    epochs = 20
 
     history = model.fit(x_train, y_train,
                         batch_size=batch_size,
