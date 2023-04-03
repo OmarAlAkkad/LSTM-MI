@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     input_shape = (x_train.shape[1],x_train.shape[2])
     model = create_model(input_shape)
-    history = model.fit(x_train, y_train, epochs = 10, validation_data = (x_test, y_test), verbose =1,batch_size= 150)
+    history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size= 150)
 
     train_predictions = model.predict(x_train)
     train_predictions_labels = []

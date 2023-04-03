@@ -49,20 +49,28 @@ def prepare_sets(inputs, labels,number_of_classes):
 def load_model(data_type):
     print("loading model")
     checkpoint_path = f"training_{data_type}/cp.ckpt"
-    model = build_model(10, 32, 32, 1)
+    model = build_model(10, 28, 28, 1)
 
     model.load_weights(checkpoint_path)
 
     return model
 
-def get_prediction_vectors(set_type,num_classes, model, data, labels):
+def get_prediction_vectors(load, set_type,num_classes, model, data, labels):
     print(f"Getting prediction vector {set_type}")
-    predictions = np.empty(0, dtype="float32")
 
-    for x in range(len(data)):
-        predictions = np.append(predictions, np.array(K.eval(model.predict(np.expand_dims(data[x], axis=0)))))
+    if not load:
+        predictions = np.empty(0, dtype="float32")
 
-    predictions = predictions.reshape(-1,num_classes)
+        for x in range(len(data)):
+            predictions = np.append(predictions, np.array(K.eval(model.predict(np.expand_dims(data[x], axis=0)))))
+
+        predictions = predictions.reshape(-1,num_classes)
+
+        pickle.dump(predictions, open(f'{set_type}_predictions_mnist.p', 'wb'))
+
+    data_file = open(f'{set_type}_predictions_mnist.p', 'rb')
+    predictions = pickle.load(data_file)
+    data_file.close()
 
     predictions_labels = []
     for pred in predictions:
@@ -72,20 +80,24 @@ def get_prediction_vectors(set_type,num_classes, model, data, labels):
     for pred in labels:
         y_label.append(np.argmax(pred, axis=0))
 
-    pickle.dump(predictions, open(f'{set_type}_predictions_mnist.p', 'wb'))
-
     return predictions, predictions_labels, y_label
 
-def get_lstm_vectors(set_type,model, data, num_of_neurons, direction = 0):
+def get_lstm_vectors(load,set_type,model, data, direction = 0):
     print(f"Getting LSTM vectors {set_type}")
-    lstm = np.empty(0, dtype="float32")
 
-    for x in range(len(data)):
-        lstm = np.append(lstm, np.array(K.eval(model.lstm(np.expand_dims(data[x], axis=0))))[0][direction][0][:num_of_neurons])
+    if not load:
+        lstm = np.empty(0, dtype="float32")
 
-    lstm = lstm.reshape(-1,num_of_neurons)
+        for x in range(len(data)):
+            lstm = np.append(lstm, np.array(K.eval(model.lstm(np.expand_dims(data[x], axis=0))))[0][direction][0])
 
-    pickle.dump(lstm, open(f'{set_type}_lstm_mnist.p', 'wb'))
+        lstm = lstm.reshape(-1,lstm.shape[0]/len(data))
+
+        pickle.dump(lstm, open(f'{set_type}_lstm_mnist.p', 'wb'))
+
+    data_file = open(f'{set_type}_lstm_mnist.p', 'rb')
+    lstm = pickle.load(data_file)
+    data_file.close()
 
     return lstm
 
@@ -96,8 +108,8 @@ def prepare_dataframe(inputs,all_labels,predictions,losses,lstm,labels,label = 1
             predictions[i].append(losses[i])
         if include_labels:
             predictions[i].append(labels[i])
-            if include_lstm:
-                predictions[i].append(lstm[i])
+        if include_lstm:
+            predictions[i].extend(lstm[i])
         inputs.append(predictions[i])
         all_labels.append(label)
 
@@ -162,8 +174,8 @@ def create_statistics_dataframe(train_predictions_labels, y_train_label, test_pr
     return d
 
 if __name__ == '__main__':
-    datas = ['shadow','target']
-
+    datas = ['target','shadow']
+    load = False
     for data in datas:
         inputs, labels = load_data(data)
 
@@ -173,14 +185,14 @@ if __name__ == '__main__':
 
         model = load_model(data)
 
-        train_predictions, train_predictions_labels, y_train_label = get_prediction_vectors(data,num_classes,model,x_train, y_train)
-        test_predictions, test_predictions_labels, y_test_label = get_prediction_vectors(data,num_classes,model, x_test, y_test)
+        train_predictions, train_predictions_labels, y_train_label = get_prediction_vectors(load,data,num_classes,model,x_train, y_train)
+        test_predictions, test_predictions_labels, y_test_label = get_prediction_vectors(load,data,num_classes,model, x_test, y_test)
 
         train_losses = tf.keras.backend.categorical_crossentropy(y_train, train_predictions).numpy()
         test_losses = tf.keras.backend.categorical_crossentropy(y_test, test_predictions).numpy()
 
-        train_lstm = get_lstm_vectors(data, model, x_train, num_of_neurons = 1280, direction = 0)
-        test_lstm = get_lstm_vectors(data, model, x_test, num_of_neurons = 1280, direction = 0)
+        train_lstm = get_lstm_vectors(load,data, model, x_train, direction = 0).tolist()
+        test_lstm = get_lstm_vectors(load,data, model, x_test, direction = 0).tolist()
 
         train_predictions_list = train_predictions.tolist()
         test_predictions_list = test_predictions.tolist()
