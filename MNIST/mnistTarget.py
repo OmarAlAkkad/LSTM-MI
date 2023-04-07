@@ -7,6 +7,7 @@ Created on Wed Jan 25 13:45:26 2023
 import pickle
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Bidirectional, Conv1D, MaxPool1D, Dense, Flatten, Dropout, AveragePooling2D, LSTM, TimeDistributed, Attention
 import matplotlib.pyplot as plt
@@ -18,6 +19,8 @@ from keras import models, layers
 from keras import backend as K
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
 from keras_self_attention import SeqSelfAttention
+from lstm_model import build_model
+import os
 
 def load_data():
     data_file = open('mnist_target_data.p', 'rb')
@@ -29,23 +32,6 @@ def load_data():
     data_file.close()
 
     return data, labels
-
-
-def build_model(train, num_classes):
-    model = Sequential()
-    inputs = keras.Input(shape=((train.shape[1], train.shape[2])))
-    lstm = (LSTM(512, activation="tanh",return_sequences=True))(inputs)
-    lstm2 = (LSTM(512, activation = 'tanh',go_backwards=True, return_sequences = True))(lstm)
-    flatten = layers.Flatten()(lstm2)
-    dense1 = layers.Dense(256, activation="relu")(flatten)
-    dense2 = layers.Dense(128, activation="relu")(dense1)
-    dense3 = layers.Dense(64, activation="relu")(dense2)
-    dense4 = layers.Dense(32, activation="relu")(dense3)
-    outputs = layers.Dense(num_classes, activation = 'softmax')(dense4)
-    model = keras.Model(inputs=inputs, outputs=outputs, name="target_mnist")
-    model.compile(optimizer = 'adam', loss = 'categorical_crossentropy',  metrics=['accuracy'])
-
-    return model
 
 def plot_data(history):
     acc = history.history['accuracy']
@@ -102,18 +88,21 @@ if __name__ == "__main__":
     train_rmse = []
     test_rmse = []
 
-    model = build_model(x_train, num_classes)
+    opt = Adam(learning_rate = 0.0001)
+
+    model = build_model(num_classes)
+    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
+
+    checkpoint_path = "training_lstm_target/cp.ckpt"
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+
+    # Create a callback that saves the model's weights
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                      save_weights_only=True,
+                                                      verbose=1)
+
+    history=model.fit(x_train,y_train, batch_size=512 ,epochs=100, validation_data = (x_test, y_test), callbacks=[cp_callback])
     model.summary()
-
-    batch_size = 100
-    epochs = 20
-
-    history = model.fit(x_train, y_train,
-                        batch_size=batch_size,
-                        epochs=epochs,
-                        shuffle=True,
-                        validation_data = (x_test, y_test))
-
 
     score = model.evaluate(x_test, y_test)
     score_t = model.evaluate(x_train, y_train)
@@ -124,103 +113,6 @@ if __name__ == "__main__":
 
     print('error rate of :', error_rate)
 
-    train_accuracy = score_t[1]
-    test_accuracy = score[1]
-
-
-    model.save('target_mnist')
-
-    train_predictions = model.predict(x_train)
-    test_predictions = model.predict(x_test)
-
-    train_predictions_labels = []
-    for pred in train_predictions:
-        train_predictions_labels.append(np.argmax(pred, axis=0))
-
-
-    test_predictions_labels = []
-    for pred in test_predictions:
-        test_predictions_labels.append(np.argmax(pred, axis=0))
-
-    y_train_label = []
-    for pred in y_train:
-        y_train_label.append(np.argmax(pred, axis=0))
-
-    y_test_label = []
-    for pred in y_test:
-        y_test_label.append(np.argmax(pred, axis=0))
-
-    train_losses = tf.keras.backend.categorical_crossentropy(y_train, train_predictions).numpy()
-    test_losses = tf.keras.backend.categorical_crossentropy(y_test, test_predictions).numpy()
-
-    train_predictions_list = train_predictions.tolist()
-    test_predictions_list = test_predictions.tolist()
-
-    inputs = []
-    all_labels = []
-    attention_weights = []
-
-    for i in range(len(train_predictions)):
-        # if train_predictions_labels[i] == y_train_label[i]:
-            train_predictions_list[i].append(train_losses[i])
-            train_predictions_list[i].append(y_train_label[i])
-            inputs.append(train_predictions_list[i])
-            all_labels.append(1)
-    for i in range(len(test_predictions)):
-        # if test_predictions_labels[i] == y_test_label[i]:
-            test_predictions_list[i].append(test_losses[i])
-            test_predictions_list[i].append(y_test_label[i])
-            inputs.append(test_predictions_list[i])
-            all_labels.append(0)
-
-    temp = list(zip(inputs, all_labels))
-    random.shuffle(temp)
-    inputs, all_labels = zip(*temp)
-    inputs, all_labels = list(inputs), list(all_labels)
-    d = {
-        'Inputs': inputs,
-        'Labels': all_labels
-        }
-    locals()['target_model_dataframe_mnist'] = pd.DataFrame(data=d)
-
-    pickle.dump(locals()['target_model_dataframe_mnist'], open('target_renet_dataframe_mnist.p', 'wb'))
-
-    sets = ["train", "test"]
-    models = []
-    Accuracy = []
-    Precision = []
-    Recall = []
-    Negative_Recall = []
-    F1_Score = []
-    Data = []
-    for set_type in sets:
-        locals()[f'confusion_matrix_{set_type}'] = confusion_matrix(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'])
-        locals()[f'TN_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][0][0]
-        locals()[f'FP_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][0][1]
-        locals()[f'FN_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][1][0]
-        locals()[f'TP_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][1][1]
-        locals()[f'Negative_recall_{set_type}'] = locals()[f'TN_{set_type}'] / (locals()[f'TN_{set_type}'] + locals()[f'FP_{set_type}'])
-        locals()[f'precision_{set_type}'] = precision_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'],average='macro')
-        locals()[f'recall_{set_type}'] = recall_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'],average='macro')
-
-        locals()[f'f1_{set_type}'] = f1_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'], average='macro')
-        models.append(f'model')
-        Data.append(set_type)
-        Accuracy.append(locals()[f'{set_type}_accuracy'])
-        Precision.append(locals()[f'precision_{set_type}'])
-        Recall.append(locals()[f'recall_{set_type}'])
-        Negative_Recall.append( locals()[f'Negative_recall_{set_type}'])
-        F1_Score.append(locals()[f'f1_{set_type}'])
-
-    d = pd.DataFrame({'Model' : models,
-         'Data': Data,
-         'Accuracy': Accuracy,
-         'Precision': Precision,
-         'Recall': Recall,
-         'Negative Recall': Negative_Recall,
-         'F1 Score': F1_Score,
-         })
-    d.to_csv(f'target_mnist.csv')
 
     plot_data(history)
 

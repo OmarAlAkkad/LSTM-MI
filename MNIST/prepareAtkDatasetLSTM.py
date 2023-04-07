@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar 31 22:01:52 2023
+Created on Mon Apr  3 00:37:37 2023
 
 @author: omars
 """
-from model import build_model
+from lstm_model import build_model
 from tensorflow.keras.optimizers import Adam, SGD
 import pickle
 import tensorflow as tf
@@ -37,7 +37,7 @@ def prepare_sets(inputs, labels,number_of_classes):
     #this function is used to process the data into usable format.
     #convert inputs to float type and normalize to to range 0,1
     inputs = inputs.astype("float32") / 255.0
-    inputs = inputs.reshape(-1,28,28,1)
+    inputs = inputs.reshape(-1,28,28)
     #Let images have the shape (..., 1)
     # inputs = np.expand_dims(inputs, -1)
     #one hot encode labels
@@ -46,10 +46,10 @@ def prepare_sets(inputs, labels,number_of_classes):
 
     return x_train, y_train , x_test, y_test
 
-def load_model(data_type):
+def load_model(data_type,nClasses):
     print("loading model")
-    checkpoint_path = f"training_{data_type}/cp.ckpt"
-    model = build_model(10, 28, 28, 1)
+    checkpoint_path = f"training_lstm_{data_type}/cp.ckpt"
+    model = build_model(nClasses)
 
     model.load_weights(checkpoint_path)
 
@@ -59,16 +59,11 @@ def get_prediction_vectors(load, set_type,num_classes, model, data, labels):
     print(f"Getting prediction vector {set_type}")
 
     if not load:
-        predictions = np.empty(0, dtype="float32")
+        predictions = model.predict(data)
 
-        for x in range(len(data)):
-            predictions = np.append(predictions, np.array(K.eval(model.predict(np.expand_dims(data[x], axis=0)))))
+        pickle.dump(predictions, open(f'{set_type}_predictions_mnist_lstm.p', 'wb'))
 
-        predictions = predictions.reshape(-1,num_classes)
-
-        pickle.dump(predictions, open(f'{set_type}_predictions_mnist.p', 'wb'))
-
-    data_file = open(f'{set_type}_predictions_mnist.p', 'rb')
+    data_file = open(f'{set_type}_predictions_mnist_lstm.p', 'rb')
     predictions = pickle.load(data_file)
     data_file.close()
 
@@ -89,13 +84,13 @@ def get_lstm_vectors(load,set_type,model, data, direction = 0):
         lstm = np.empty(0, dtype="float32")
 
         for x in range(len(data)):
-            lstm = np.append(lstm, np.array(K.eval(model.lstm(np.expand_dims(data[x], axis=0))))[0][direction][0])
+            lstm = np.append(lstm, np.array(K.eval(model.lstm(np.expand_dims(data[x], axis=0))))[0][direction])
 
         lstm = lstm.reshape(-1,lstm.shape[0]//len(data))
 
-        pickle.dump(lstm, open(f'{set_type}_lstm_mnist.p', 'wb'))
+        pickle.dump(lstm, open(f'{set_type}_lstm_mnist_lstm.p', 'wb'))
 
-    data_file = open(f'{set_type}_lstm_mnist.p', 'rb')
+    data_file = open(f'{set_type}_lstm_mnist_lstm.p', 'rb')
     lstm = pickle.load(data_file)
     data_file.close()
 
@@ -125,11 +120,11 @@ def create_dataframe(data, inputs, all_labels):
         'Inputs': inputs,
         'Labels': all_labels
         }
-    locals()[f'{data}_renet_dataframe_mnist'] = pd.DataFrame(data=d)
+    locals()[f'{data}_dataframe_mnist_lstm'] = pd.DataFrame(data=d)
 
-    pickle.dump(locals()[f'{data}_renet_dataframe_mnist'], open(f'{data}_renet_dataframe_mnist.p', 'wb'))
+    pickle.dump(locals()[f'{data}_dataframe_mnist_lstm'], open(f'{data}_dataframe_mnist_lstm.p', 'wb'))
 
-    return locals()[f'{data}_renet_dataframe_mnist']
+    return locals()[f'{data}_dataframe_mnist_lstm']
 
 def create_statistics_dataframe(train_predictions_labels, y_train_label, test_predictions_labels, y_test_label):
     print("creating statistics dataframe")
@@ -169,7 +164,7 @@ def create_statistics_dataframe(train_predictions_labels, y_train_label, test_pr
          'Negative Recall': Negative_Recall,
          'F1 Score': F1_Score,
          })
-    d.to_csv(f'{data}_renet_mnist.csv')
+    d.to_csv(f'{data}_mnist_lstm.csv')
 
     return d
 
@@ -183,7 +178,7 @@ if __name__ == '__main__':
 
         x_train, y_train , x_test, y_test = prepare_sets(inputs, labels, num_classes)
 
-        model = load_model(data)
+        model = load_model(data,num_classes)
 
         train_predictions, train_predictions_labels, y_train_label = get_prediction_vectors(load,data,num_classes,model,x_train, y_train)
         test_predictions, test_predictions_labels, y_test_label = get_prediction_vectors(load,data,num_classes,model, x_test, y_test)
@@ -203,6 +198,6 @@ if __name__ == '__main__':
         inputs, all_labels = prepare_dataframe(inputs,all_labels,train_predictions_list,train_losses,train_lstm,y_train_label,label = 1,include_losses = True, include_labels = True,include_lstm=True)
         inputs, all_labels = prepare_dataframe(inputs,all_labels,test_predictions_list,test_losses,test_lstm,y_test_label,label = 0,include_losses = True, include_labels = True,include_lstm=True)
 
-        locals()[f'{data}_renet_dataframe_mnist'] = create_dataframe(data, inputs, all_labels)
+        locals()[f'{data}_dataframe_mnist_lstm'] = create_dataframe(data, inputs, all_labels)
 
-        d = create_statistics_dataframe(train_predictions_labels, y_train_label, test_predictions_labels, y_test_label)
+        locals()[f'{data}_d_lstm'] = create_statistics_dataframe(train_predictions_labels, y_train_label, test_predictions_labels, y_test_label)

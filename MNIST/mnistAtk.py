@@ -15,11 +15,11 @@ from sklearn.metrics import f1_score,recall_score,precision_score, confusion_mat
 from sklearn.metrics import roc_auc_score
 
 def load_data():
-    data_file = open(f'target_renet_dataframe_mnist.p', 'rb')
+    data_file = open(f'target_dataframe_mnist_lstm.p', 'rb')
     target = pickle.load(data_file)
     data_file.close()
 
-    data_file = open(f'shadow_renet_dataframe_mnist.p', 'rb')
+    data_file = open(f'shadow_dataframe_mnist_lstm.p', 'rb')
     shadow = pickle.load(data_file)
     data_file.close()
 

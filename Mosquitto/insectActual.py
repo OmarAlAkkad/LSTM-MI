@@ -20,6 +20,8 @@ import keras
 from keras import models, layers
 from keras import backend
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
+from lstm_model import build_model
+import os
 
 def load_data():
     data_file = open('insect_target_data.p', 'rb')
@@ -51,43 +53,6 @@ def feature_scaling(ts):
         normalized_ts[i] = (ts[i]-minimum)/r
 
     return normalized_ts
-
-def build_model(train, input_shape, num_classes):
-    # train = train.reshape(-1, train.shape[1], train.shape[2], 1)
-    model = Sequential()
-    # model.add(Conv1D(64, 2, strides=1, activation='relu', padding="same", input_shape=(train.shape[1], train.shape[2])))
-    # model.add(MaxPool1D(pool_size=2, strides=2, padding='valid'))
-    # model.add(Conv1D(64, 2, strides=1, activation='relu', padding="same"))
-    # model.add(MaxPool1D(pool_size=2, strides=2, padding='valid'))
-    # # cnn.add(Flatten())
-    # model.add(TimeDistributed(Dense(32)))
-    # model.add(layers.Conv2D(32, kernel_size=(3, 3), input_shape=input_shape))
-    # model.add(layers.BatchNormalization(name="batch_norm_1"))
-    # model.add(layers.LeakyReLU(alpha=0.1))
-    # model.add(layers.MaxPool2D(pool_size=(2, 2)))
-    # model.add(layers.Dropout(0.25))
-    # model.add(layers.Conv2D(32, (3, 3)))
-    # model.add(layers.BatchNormalization(name="batch_norm_2"))
-    # model.add(layers.LeakyReLU(alpha=0.1))
-    # model.add(layers.MaxPool2D(pool_size=(2, 2)))
-    # model.add(layers.Dropout(0.25))
-    # model.add(TimeDistributed(Dense(32)))
-    # model.add(layers.Flatten())
-    model.add(LSTM(1024, activation = 'relu',return_sequences=True, input_shape = (train.shape[1], train.shape[2])))
-    model.add(LSTM(512, activation = 'relu'))
-    model.add(layers.Dropout(0.2))
-    model.add(Dense(512, activation = 'relu'))
-    model.add(Dense(128, activation = 'relu'))
-    model.add(layers.Dropout(0.15))
-    model.add(Dense(64, activation = 'relu'))
-    # model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(num_classes, activation='softmax'))
-    opt = Adam(learning_rate = 0.001)
-    model.compile(loss=keras.losses.categorical_crossentropy,
-                     optimizer=opt,
-                     metrics=['accuracy'])
-
-    return model
 
 def plot_data(history):
     acc = history.history['accuracy']
@@ -151,6 +116,11 @@ def prepare_sets(inputs, labels, m, n):
     y_train = tf.keras.utils.to_categorical(y_train, num_classes)
     y_test = tf.keras.utils.to_categorical(y_test, num_classes)
 
+    pickle.dump(x_train, open('x_train_insect_target_lstm.p', 'wb'))
+    pickle.dump(y_train, open('y_train_insect_target_lstm.p', 'wb'))
+    pickle.dump(x_test, open('x_test_insect_target_lstm.p', 'wb'))
+    pickle.dump(y_test, open('y_test_insect_target_lstm.p', 'wb'))
+
     return input_shape, num_classes, x_train, y_train , x_test, y_test
 
 
@@ -166,17 +136,21 @@ if __name__ == "__main__":
     train_rmse = []
     test_rmse = []
 
-    model = build_model(x_train, input_shape, num_classes)
+    opt = Adam(learning_rate = 0.0001)
+
+    model = build_model(num_classes)
+    model.compile(loss='categorical_crossentropy',optimizer= opt ,metrics=['accuracy'])
+
+    checkpoint_path = "training_lstm_target/cp.ckpt"
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+
+    # Create a callback that saves the model's weights
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                      save_weights_only=True,
+                                                      verbose=1)
+
+    history=model.fit(x_train,y_train, batch_size=512 ,epochs=100, validation_data = (x_test, y_test), callbacks=[cp_callback])
     model.summary()
-
-    batch_size = 200
-    epochs = 100
-
-    history = model.fit(x_train, y_train,
-                        batch_size=batch_size,
-                        epochs=epochs,
-                        shuffle=True,
-                        validation_split=0.1)
 
     score = model.evaluate(x_test, y_test)
     score_t = model.evaluate(x_train, y_train)
@@ -186,102 +160,6 @@ if __name__ == "__main__":
     error_rate = round(1 - score[1], 3)
 
     print('error rate of :', error_rate)
-
-    train_accuracy = score_t[1]
-    test_accuracy = score[1]
-
-
-    model.save('target_insect_lstm')
-
-    train_predictions = model.predict(x_train)
-    test_predictions = model.predict(x_test)
-
-    train_predictions_labels = []
-    for pred in train_predictions:
-        train_predictions_labels.append(np.argmax(pred, axis=0))
-
-
-    test_predictions_labels = []
-    for pred in test_predictions:
-        test_predictions_labels.append(np.argmax(pred, axis=0))
-
-    y_train_label = []
-    for pred in y_train:
-        y_train_label.append(np.argmax(pred, axis=0))
-
-    y_test_label = []
-    for pred in y_test:
-        y_test_label.append(np.argmax(pred, axis=0))
-
-    train_losses = tf.keras.backend.categorical_crossentropy(y_train, train_predictions).numpy()
-    test_losses = tf.keras.backend.categorical_crossentropy(y_test, test_predictions).numpy()
-
-    train_predictions_list = train_predictions.tolist()
-    test_predictions_list = test_predictions.tolist()
-
-    inputs = []
-    all_labels = []
-    for i in range(len(train_predictions)):
-        # if train_predictions_labels[i] == y_train_label[i]:
-            train_predictions_list[i].append(train_losses[i])
-            # train_predictions_list[i].append(y_train_label[i])
-            inputs.append(train_predictions_list[i])
-            all_labels.append(1)
-    for i in range(len(test_predictions)):
-        # if test_predictions_labels[i] == y_test_label[i]:
-            test_predictions_list[i].append(test_losses[i])
-            # test_predictions_list[i].append(y_test_label[i])
-            inputs.append(test_predictions_list[i])
-            all_labels.append(0)
-
-    temp = list(zip(inputs, all_labels))
-    random.shuffle(temp)
-    inputs, all_labels = zip(*temp)
-    inputs, all_labels = list(inputs), list(all_labels)
-    d = {
-        'Inputs': inputs ,
-        'Labels': all_labels
-        }
-    locals()['target_model_dataframe_insect_lstm'] = pd.DataFrame(data=d)
-
-    pickle.dump(locals()['target_model_dataframe_insect_lstm'], open('target_model_dataframe_insect_lstm.p', 'wb'))
-
-    sets = ["train", "test"]
-    models = []
-    Accuracy = []
-    Precision = []
-    Recall = []
-    Negative_Recall = []
-    F1_Score = []
-    Data = []
-    for set_type in sets:
-        locals()[f'confusion_matrix_{set_type}'] = confusion_matrix(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'])
-        locals()[f'TN_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][0][0]
-        locals()[f'FP_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][0][1]
-        locals()[f'FN_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][1][0]
-        locals()[f'TP_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][1][1]
-        locals()[f'Negative_recall_{set_type}'] = locals()[f'TN_{set_type}'] / (locals()[f'TN_{set_type}'] + locals()[f'FP_{set_type}'])
-        locals()[f'precision_{set_type}'] = precision_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'],average='micro')
-        locals()[f'recall_{set_type}'] = recall_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'],average='micro')
-
-        locals()[f'f1_{set_type}'] = f1_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'], average='micro')
-        models.append(f'model')
-        Data.append(set_type)
-        Accuracy.append(locals()[f'{set_type}_accuracy'])
-        Precision.append(locals()[f'precision_{set_type}'])
-        Recall.append(locals()[f'precision_{set_type}'])
-        Negative_Recall.append( locals()[f'Negative_recall_{set_type}'])
-        F1_Score.append(locals()[f'f1_{set_type}'])
-
-    d = pd.DataFrame({'Model' : models,
-         'Data': Data,
-         'Accuracy': Accuracy,
-         'Precision': Precision,
-         'Recall': Recall,
-         'Negative Recall': Negative_Recall,
-         'F1 Score': F1_Score,
-         })
-    d.to_csv(f'target_insect_lstm.csv')
 
     plot_data(history)
 

@@ -7,6 +7,7 @@ Created on Mon Feb  6 18:06:00 2023
 import pickle
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, AveragePooling2D, LSTM, BatchNormalization
 import pandas as pd
@@ -52,11 +53,16 @@ def create_model(input_shape):
     model.add(Flatten()) #flatten the array to input to dense layer
     model.add(BatchNormalization())
     #model.add(Dropout(0.2))
-    model.add(Dense(100, activation='relu'))
+    model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.2))
-    model.add(Dense(100, activation='relu'))
+    model.add(Dense(512, activation='relu'))
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(512, activation='relu'))
+    model.add(Dense(512, activation='relu'))
     model.add(Dense(2, activation='softmax')) #output layer with softmax activation function to get predictions vector
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    opt = Adam(lr= 0.0001)
+    model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
     return model # return the created model
 
 def xgboost_model(x_train,y_train,x_test,y_test):
