@@ -1,0 +1,7 @@
+Epoch: 0 | Train Loss: 2.016 | Train Acc: 21.608% (3236/14976)
+Epoch: 0 | Test Loss: 1.888 | Test Acc: 25.928% (3883/14976)
+Epoch: 1 | Train Loss: 1.674 | Train Acc: 35.377% (5298/14976)
+Epoch: 1 | Test Loss: 1.686 | Test Acc: 35.043% (5248/14976)
+Epoch: 2 | Train Loss: 1.392 | Train Acc: 48.598% (7278/14976)
+Epoch: 2 | Test Loss: 1.488 | Test Acc: 46.588% (6977/14976)
+Epoch: 3 | Train Loss: 1.141 | Train Acc: 58.707% (8792/14976)
