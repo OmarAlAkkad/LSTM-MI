@@ -708,14 +708,14 @@ if __name__ == "__main__":
               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
               ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
 
-    LSTM_models = [('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
-                  ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
-              # [('DLA','DLA-BiLSTM','./Target-DLA-BiLSTM_models/','DLA-BiLSTM-Target'),('DLA','DLA-BiLSTM','./Shadow-DLA-BiLSTM_models/','DLA-BiLSTM-Shadow'),
-              # ('DLA','DLA-LSTM','./Target-DLA-LSTM_models/','DLA-LSTM-Target'),('DLA','DLA-LSTM','./Shadow-DLA-LSTM_models/','DLA-LSTM-Shadow'),
-              # ('resnet','ResNet18-BiLSTM','./Target-ResNet18-BiLSTM_models/','ResNet18-BiLSTM-Target'),('resnet','ResNet18-BiLSTM','./Shadow-ResNet18-BiLSTM_models/','ResNet18-BiLSTM-Shadow'),
-              # ('resnet','ResNet18-LSTM','./Target-ResNet18-LSTM_models/','ResNet18-LSTM-Target'),('resnet','ResNet18-LSTM','./Shadow-ResNet18-LSTM_models/','ResNet18-LSTM-Shadow'),
-              # ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
-              # ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),]
+    LSTM_models =[('DLA','DLA-BiLSTM','./Target-DLA-BiLSTM_models/','DLA-BiLSTM-Target'),('DLA','DLA-BiLSTM','./Shadow-DLA-BiLSTM_models/','DLA-BiLSTM-Shadow'),
+               ('DLA','DLA-LSTM','./Target-DLA-LSTM_models/','DLA-LSTM-Target'),('DLA','DLA-LSTM','./Shadow-DLA-LSTM_models/','DLA-LSTM-Shadow'),
+               ('resnet','ResNet18-BiLSTM','./Target-ResNet18-BiLSTM_models/','ResNet18-BiLSTM-Target'),('resnet','ResNet18-BiLSTM','./Shadow-ResNet18-BiLSTM_models/','ResNet18-BiLSTM-Shadow'),
+               ('resnet','ResNet18-LSTM','./Target-ResNet18-LSTM_models/','ResNet18-LSTM-Target'),('resnet','ResNet18-LSTM','./Shadow-ResNet18-LSTM_models/','ResNet18-LSTM-Shadow'),
+               ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
+               ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
+               ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
+               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
 
 
     lstm = True
