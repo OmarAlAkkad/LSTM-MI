@@ -45,7 +45,7 @@ def preprocess_data(inputs, labels):
     total = []
     inputs = np.array(inputs)
     for i in range(len(inputs)):
-        total.append(inputs[i][:10])
+        total.append(inputs[i])
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, 2)
     labels = np.array(labels)
