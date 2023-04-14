@@ -17,7 +17,7 @@ from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, AveragePooling2D, LSTM, BatchNormalization
 import pandas as pd
-import xgboost
+#import xgboost
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
 from sklearn.metrics import roc_auc_score
 
@@ -45,7 +45,7 @@ def preprocess_data(inputs, labels):
     total = []
     inputs = np.array(inputs)
     for i in range(len(inputs)):
-        total.append(inputs[i])
+        total.append(inputs[i][:int(len(inputs)*0.1)])
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, 2)
     labels = np.array(labels)
@@ -59,6 +59,9 @@ def create_model(input_shape):
     model.add(Flatten()) #flatten the array to input to dense layer
     model.add(BatchNormalization())
     #model.add(Dropout(0.2))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(100, activation='relu'))
     model.add(Dense(100, activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(100, activation='relu'))
@@ -107,6 +110,15 @@ if __name__ == "__main__":
               ('VGG-BiLSTM'),
               ('VGG-LSTM'),
               ('VGG')]
+
+    models = [('DLA-BiLSTM'),
+              ('DLA-LSTM'),
+              ('ResNet18-BiLSTM'),
+              ('ResNet18-LSTM'),
+              ('DenseNet121-BiLSTM'),
+              ('DenseNet121-LSTM'),
+              ('VGG-BiLSTM'),
+              ('VGG-LSTM')]
 
     for method_name in models:
         print(f"Training Attack model for {method_name}")
