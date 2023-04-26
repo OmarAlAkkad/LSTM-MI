@@ -20,6 +20,7 @@ import pandas as pd
 #import xgboost
 from sklearn.metrics import f1_score,recall_score,precision_score, confusion_matrix
 from sklearn.metrics import roc_auc_score
+from white_box_model import build_model
 
 def load_data(name):
     data_file = open(f'{name}-Target_dataframe.p', 'rb')
@@ -44,57 +45,11 @@ def preprocess_data(inputs, labels):
     #Let images have the shape (..., 1)
     total = []
     inputs = np.array(inputs)
-    for i in range(len(inputs)):
-        total.append(inputs[i][:int(len(inputs)*0.1)])
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, 2)
     labels = np.array(labels)
     total = np.array(total)
     return total.reshape(-1,len(total[0]),1), labels
-
-def create_model(input_shape):
-
-    model = Sequential() #initialize model
-    model.add(tf.keras.Input(shape=(input_shape)))
-    model.add(Flatten()) #flatten the array to input to dense layer
-    model.add(BatchNormalization())
-    #model.add(Dropout(0.2))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(2, activation='softmax')) #output layer with softmax activation function to get predictions vector
-    opt = Adam(learning_rate = 0.0001)
-    model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
-    return model # return the created model
-
-def xgboost_model(x_train,y_train,x_test,y_test):
-    model_xgboost = xgboost.XGBClassifier(learning_rate=0.05,
-                                          max_depth=2,
-                                          n_estimators=5000,
-                                          subsample=0.5,
-                                          colsample_bytree=0.25,
-                                          eval_metric='auc',
-                                          verbosity=1,
-                                          use_label_encoder=False)
-
-    eval_set = [(x_test, y_test)]
-
-    model_xgboost.fit(x_train,
-                      y_train,
-                      early_stopping_rounds=10,
-                      eval_set=eval_set,
-                      verbose=True)
-
-    evaluation_results = model_xgboost.evals_result()
-
-    y_train_pred = model_xgboost.predict_proba(x_train)[:,1]
-    y_test_pred = model_xgboost.predict_proba(x_test)[:,1]
-
-    print("AUC Train: {:.4f}\nAUC Valid: {:.4f}".format(roc_auc_score(y_train, y_train_pred),
-                                                        roc_auc_score(y_test, y_test_pred)))
 
 
 if __name__ == "__main__":
@@ -111,15 +66,6 @@ if __name__ == "__main__":
               ('VGG-LSTM'),
               ('VGG')]
 
-    models = [('DLA-BiLSTM'),
-              ('DLA-LSTM'),
-              ('ResNet18-BiLSTM'),
-              ('ResNet18-LSTM'),
-              ('DenseNet121-BiLSTM'),
-              ('DenseNet121-LSTM'),
-              ('VGG-BiLSTM'),
-              ('VGG-LSTM')]
-
     for method_name in models:
         print(f"Training Attack model for {method_name}")
         models = []
@@ -135,10 +81,8 @@ if __name__ == "__main__":
         x_train, y_train = preprocess_data(x_train, y_train)
         x_test, y_test = preprocess_data(x_test, y_test)
 
-        # xgboost_model(x_train,y_train,x_test,y_test)
-
         input_shape = (x_train.shape[1],x_train.shape[2])
-        model = create_model(input_shape)
+        model = build_model()
         history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size= 150)
 
         train_predictions = model.predict(x_train)
