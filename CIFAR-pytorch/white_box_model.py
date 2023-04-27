@@ -10,7 +10,7 @@ from tensorflow.keras.layers import concatenate
 
 class build_model(keras.Model):
 
-    def __init__(self, nClasses, lstms, loss, vector, label, l1=128, l2=64):
+    def __init__(self, nClasses, l1=128, l2=64):
         super(build_model,self).__init__()
 
         self.flatten = Flatten()
@@ -21,10 +21,10 @@ class build_model(keras.Model):
         self.dense256 = Dense(256, activation = 'relu')
         self.dense128 = Dense(128, activation = 'relu')
         self.dense64 = Dense(64, activation = 'relu')
-        self.denselstm = Dense(len(lstms), activation = 'relu')
-        self.outputlayer = Dense(2,activation = 'softmax')
+        self.outputlayer = Dense(nClasses,activation = 'softmax')
 
     def call(self, inputs):
+        print(inputs)
         lstm = self.lstm(self.lsmts)
         loss = self.loss(self.loss)
         vector = self.vector(self.vector)

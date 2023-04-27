@@ -51,7 +51,6 @@ def preprocess_data(inputs, labels):
     total = np.array(total)
     return total.reshape(-1,len(total[0]),1), labels
 
-
 if __name__ == "__main__":
     models = [('DLA-BiLSTM'),
               ('DLA-LSTM'),
@@ -82,7 +81,7 @@ if __name__ == "__main__":
         x_test, y_test = preprocess_data(x_test, y_test)
 
         input_shape = (x_train.shape[1],x_train.shape[2])
-        model = build_model()
+        model = build_model(2,l1=128,l2=64)
         history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size= 150)
 
         train_predictions = model.predict(x_train)
