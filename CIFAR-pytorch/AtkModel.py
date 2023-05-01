@@ -43,27 +43,26 @@ def load_data(name):
 def preprocess_data(inputs, labels):
     #this function is used to process the data into usable format.
     #Let images have the shape (..., 1)
-    total = []
-    inputs = np.array(inputs)
+    elements = len(inputs[0])
+    print(len(inputs[0]))
+    inputs=np.array([np.array(xi) for xi in inputs])
+    print(inputs.shape)
+    inputs = inputs.reshape(-1, elements, 1)
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, 2)
     labels = np.array(labels)
-    total = np.array(total)
-    return total.reshape(-1,len(total[0]),1), labels
+    return inputs, labels
 
 if __name__ == "__main__":
-    models = [('DLA-BiLSTM'),
-              ('DLA-LSTM'),
-              ('DLA'),
+    models = [('DLA-LSTM'),
               ('ResNet18-BiLSTM'),
               ('ResNet18-LSTM'),
-              ('ResNet18'),
               ('DenseNet121-BiLSTM'),
               ('DenseNet121-LSTM'),
               ('DenseNet121'),
               ('VGG-BiLSTM'),
               ('VGG-LSTM'),
-              ('VGG')]
+              ]
 
     for method_name in models:
         print(f"Training Attack model for {method_name}")
@@ -79,10 +78,13 @@ if __name__ == "__main__":
         x_train, y_train, x_test, y_test = load_data(method_name)
         x_train, y_train = preprocess_data(x_train, y_train)
         x_test, y_test = preprocess_data(x_test, y_test)
-
         input_shape = (x_train.shape[1],x_train.shape[2])
-        model = build_model(2,l1=128,l2=64)
-        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size= 150)
+        lstm_neurons = int(x_train.shape[1] - 12)
+        print(lstm_neurons)
+        model = build_model(2,lstm_neurons,l1=128,l2=64)
+        opt = Adam(lr = 0.0001)
+        model.compile(loss = 'categorical_crossentropy', optimizer = opt,metrics = ['accuracy'])
+        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=64)
 
         train_predictions = model.predict(x_train)
         train_predictions_labels = []

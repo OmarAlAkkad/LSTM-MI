@@ -716,7 +716,6 @@ if __name__ == "__main__":
                ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
                ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
                ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
-
     lstm = True
     for data,method_name,save_model_folder,name in LSTM_models:
         target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)
@@ -741,6 +740,11 @@ if __name__ == "__main__":
           net = ResNet(BasicBlock, [2, 2, 2, 2], enable_RNN='Bi-LSTM')
           net.cuda()
         elif method_name == 'ResNet18-LSTM':
+          # Model
+          net = ResNet(BasicBlock, [2, 2, 2, 2], enable_RNN='LSTM')
+          net.cuda()
+        elif method_name == 'ResNet18':
+          # Model
           # Model
           net = ResNet(BasicBlock, [2, 2, 2, 2], enable_RNN='LSTM')
           net.cuda()
@@ -805,13 +809,8 @@ if __name__ == "__main__":
                 target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,target_train_lstm, label = 1,include_losses = True, include_labels = True,include_lstm = True)
                 target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,target_train_lstm, label = 0,include_losses = True, include_labels = True,include_lstm = True)
             else:
-                target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels = get_attack_features(target_trainloader,lstm)
-                target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels = get_attack_features(target_testloader,lstm)
-                target_inputs, target_labels = [], []
-                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,label = 1,include_losses = True, include_labels = True)
-                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,label = 0,include_losses = True, include_labels = True)
-            target_dataframe = create_dataframe(name, target_inputs, target_labels)
-            target_d = create_statistics_dataframe(name,target_train_prediction_labels, target_train_labels, target_test_prediction_labels, target_test_labels)
+                target_dataframe = create_dataframe(name, target_inputs, target_labels)
+                target_d = create_statistics_dataframe(name,target_train_prediction_labels, target_train_labels, target_test_prediction_labels, target_test_labels)
         elif name[-1] == 'w':
             if lstm:
                 shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels, shadow_train_lstm = get_attack_features(shadow_trainloader,lstm)
