@@ -4,8 +4,9 @@ from tensorflow.keras.layers import concatenate
 
 class build_model(keras.Model):
 
-    def __init__(self, nClasses,lstm_neurons, percentage_neurons,l1=128, l2=64):
+    def __init__(self, nClasses,lstm_neurons, percentage_neurons,l1=128, l2=64, add_lstm = True):
         super(build_model,self).__init__()
+        self.add_lstm = add_lstm
         self.neurons = lstm_neurons
         self.percent = percentage_neurons
         self.flatten = Flatten()
@@ -29,15 +30,16 @@ class build_model(keras.Model):
         vectors_slice = inputs[:, :10]
         loss_slice = inputs[:, 10:11]
         label_slice = inputs[:, 11:12]
-        lstm_slice = inputs[:, 12:int(self.neurons*self.percent)+12]
+        if self.add_lstm:
+            lstm_slice = inputs[:, 12:int(self.neurons*self.percent)+12]
+            lstm_out = self.process_lstm(lstm_slice)
+            concat = concatenate([lstm_out, vector_out, loss_out, label_out], axis = 1)
 
-
-        lstm_out = self.process_lstm(lstm_slice)
         loss_out = self.loss_output(loss_slice)
         vector_out = self.vector_output(vectors_slice)
         label_out = self.label_output(label_slice)
 
-        concat = concatenate([lstm_out, vector_out, loss_out, label_out], axis = 1)
+        concat = concatenate([vector_out, loss_out, label_out], axis = 1)
 
         encoder = self.encoder(concat)
 
