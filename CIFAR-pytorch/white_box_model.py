@@ -4,17 +4,18 @@ from tensorflow.keras.layers import concatenate
 
 class build_model(keras.Model):
 
-    def __init__(self, nClasses,lstm_neurons, l1=128, l2=64):
+    def __init__(self, nClasses,lstm_neurons, percentage_neurons,l1=128, l2=64):
         super(build_model,self).__init__()
-
+        self.neurons = lstm_neurons
+        self.percent = percentage_neurons
         self.flatten = Flatten()
-        self.BatchNormalization = BatchNormalization()
+        self.batchnormalization = BatchNormalization()
         self.dropout = Dropout(0.2)
         self.l1 = Dense(l1, activation = 'relu')
         self.l2 = Dense(l2, activation = 'relu')
         self.l1_e = Dense(l1, activation = 'relu')
         self.l2_e = Dense(l2, activation = 'relu')
-        self.denselstm = Dense(lstm_neurons, activation='relu')
+        self.denselstm = Dense(int(lstm_neurons*percentage_neurons), activation='relu')
         self.dense320 = Dense(320, activation = 'relu')
         self.dense256 = Dense(256, activation = 'relu')
         self.dense320_e = Dense(320, activation = 'relu')
@@ -28,7 +29,7 @@ class build_model(keras.Model):
         vectors_slice = inputs[:, :10]
         loss_slice = inputs[:, 10:11]
         label_slice = inputs[:, 11:12]
-        lstm_slice = inputs[:, 12:]
+        lstm_slice = inputs[:, 12:int(self.neurons*self.percent)+12]
 
 
         lstm_out = self.process_lstm(lstm_slice)
@@ -38,7 +39,7 @@ class build_model(keras.Model):
 
         concat = concatenate([lstm_out, vector_out, loss_out, label_out], axis = 1)
 
-        encoder = self.encoder(inputs)
+        encoder = self.encoder(concat)
 
         return encoder
 
@@ -73,17 +74,14 @@ class build_model(keras.Model):
 
     def encoder(self, inputs_e):
         inputs_flattened = self.flatten(inputs_e)
-        inputs_normalized = self.BatchNormalization(inputs_flattened)
-        dropout_e = self.dropout(inputs_normalized)
-        dropout_e_normalized = self.BatchNormalization(dropout_e)
-        dense_e = self.dense320_e(dropout_e_normalized)
+        dropout_e = self.dropout(inputs_flattened)
+        dense_e = self.dense320_e(dropout_e)
         dense1_e = self.dense256_e(dense_e)
         dropout1_e = self.dropout(dense1_e)
-        dropout1_e_normalized = self.BatchNormalization(dropout1_e)
-        dense2_e = self.dense256_e1(dropout1_e_normalized)
+        dense2_e = self.dense256_e1(dropout1_e)
         dense3_e = self.l1_e(dense2_e)
         dropout2_e = self.dropout(dense3_e)
-        dropout2_e_normalized = self.BatchNormalization(dropout2_e)
-        dense4_e = self.l2_e(dropout2_e_normalized)
+        dense4_e = self.l2_e(dropout2_e)
         outputs = self.outputlayer(dense4_e)
         return outputs
+

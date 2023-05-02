@@ -44,9 +44,7 @@ def preprocess_data(inputs, labels):
     #this function is used to process the data into usable format.
     #Let images have the shape (..., 1)
     elements = len(inputs[0])
-    print(len(inputs[0]))
     inputs=np.array([np.array(xi) for xi in inputs])
-    print(inputs.shape)
     inputs = inputs.reshape(-1, elements, 1)
     #one hot encode labels
     labels = tf.keras.utils.to_categorical(labels, 2)
@@ -59,7 +57,6 @@ if __name__ == "__main__":
               ('ResNet18-LSTM'),
               ('DenseNet121-BiLSTM'),
               ('DenseNet121-LSTM'),
-              ('DenseNet121'),
               ('VGG-BiLSTM'),
               ('VGG-LSTM'),
               ]
@@ -80,11 +77,11 @@ if __name__ == "__main__":
         x_test, y_test = preprocess_data(x_test, y_test)
         input_shape = (x_train.shape[1],x_train.shape[2])
         lstm_neurons = int(x_train.shape[1] - 12)
-        print(lstm_neurons)
-        model = build_model(2,lstm_neurons,l1=128,l2=64)
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
+        model = build_model(2,lstm_neurons,0.01,l1=64,l2=64)
         opt = Adam(lr = 0.0001)
         model.compile(loss = 'categorical_crossentropy', optimizer = opt,metrics = ['accuracy'])
-        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=64)
+        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=128,callbacks = [callback])
 
         train_predictions = model.predict(x_train)
         train_predictions_labels = []

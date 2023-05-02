@@ -809,8 +809,13 @@ if __name__ == "__main__":
                 target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,target_train_lstm, label = 1,include_losses = True, include_labels = True,include_lstm = True)
                 target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,target_train_lstm, label = 0,include_losses = True, include_labels = True,include_lstm = True)
             else:
-                target_dataframe = create_dataframe(name, target_inputs, target_labels)
-                target_d = create_statistics_dataframe(name,target_train_prediction_labels, target_train_labels, target_test_prediction_labels, target_test_labels)
+                target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels = get_attack_features(target_trainloader,lstm)
+                target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels = get_attack_features(target_testloader,lstm)
+                target_inputs, target_labels = [], []
+                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,label = 1,include_losses = True, include_labels = True)
+                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,label = 0,include_losses = True, include_labels = True)
+            target_dataframe = create_dataframe(name, target_inputs, target_labels)
+            target_d = create_statistics_dataframe(name,target_train_prediction_labels, target_train_labels, target_test_prediction_labels, target_test_labels)
         elif name[-1] == 'w':
             if lstm:
                 shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels, shadow_train_lstm = get_attack_features(shadow_trainloader,lstm)
@@ -826,5 +831,6 @@ if __name__ == "__main__":
                 shadow_inputs, shadow_labels = prepare_dataframe(shadow_inputs, shadow_labels,shadow_test_predictions,shadow_test_labels,shadow_test_losses,label = 0,include_losses = True, include_labels = True)
             shadow_dataframe = create_dataframe(name, shadow_inputs, shadow_labels)
             shadow_d = create_statistics_dataframe(name,shadow_train_prediction_labels, shadow_train_labels, shadow_test_prediction_labels, shadow_test_labels)
+
 
 
