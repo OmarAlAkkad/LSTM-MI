@@ -1,5 +1,5 @@
 import keras
-from tensorflow.keras.layers import Dense, Flatten, Dropout
+from tensorflow.keras.layers import Dense, Flatten, Dropout, BatchNormalization
 from tensorflow.keras.layers import concatenate
 
 class build_model(keras.Model):
@@ -8,6 +8,7 @@ class build_model(keras.Model):
         super(build_model,self).__init__()
 
         self.flatten = Flatten()
+        self.BatchNormalization = BatchNormalization()
         self.dropout = Dropout(0.2)
         self.l1 = Dense(l1, activation = 'relu')
         self.l2 = Dense(l2, activation = 'relu')
@@ -37,7 +38,7 @@ class build_model(keras.Model):
 
         concat = concatenate([lstm_out, vector_out, loss_out, label_out], axis = 1)
 
-        encoder = self.encoder(concat)
+        encoder = self.encoder(inputs)
 
         return encoder
 
@@ -72,13 +73,17 @@ class build_model(keras.Model):
 
     def encoder(self, inputs_e):
         inputs_flattened = self.flatten(inputs_e)
-        dropout_e = self.dropout(inputs_flattened)
-        dense_e = self.dense320_e(dropout_e)
+        inputs_normalized = self.BatchNormalization(inputs_flattened)
+        dropout_e = self.dropout(inputs_normalized)
+        dropout_e_normalized = self.BatchNormalization(dropout_e)
+        dense_e = self.dense320_e(dropout_e_normalized)
         dense1_e = self.dense256_e(dense_e)
         dropout1_e = self.dropout(dense1_e)
-        dense2_e = self.dense256_e1(dropout1_e)
+        dropout1_e_normalized = self.BatchNormalization(dropout1_e)
+        dense2_e = self.dense256_e1(dropout1_e_normalized)
         dense3_e = self.l1_e(dense2_e)
         dropout2_e = self.dropout(dense3_e)
-        dense4_e = self.l2_e(dropout2_e)
+        dropout2_e_normalized = self.BatchNormalization(dropout2_e)
+        dense4_e = self.l2_e(dropout2_e_normalized)
         outputs = self.outputlayer(dense4_e)
         return outputs
