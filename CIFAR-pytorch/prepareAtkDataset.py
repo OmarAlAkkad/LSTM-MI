@@ -317,7 +317,7 @@ class DenseNet(nn.Module):
           out,_ = self.rnn(out)
           out1 = out.view(out.size(0), -1)
           out = self.linear(out1)
-        return out,out1
+        return out
 
 def DenseNet121():
     return DenseNet(Bottleneck1, [6,12,24,16], growth_rate=32)
@@ -397,7 +397,7 @@ class ResNet(nn.Module):
           out,_ = self.rnn(out)
           out1 = out.view(out.size(0), -1)
           out = self.linear(out1)
-        return out,out1
+        return out
 
 
 def ResNet18():
@@ -483,7 +483,7 @@ class DLA(nn.Module):
           out,_ = self.rnn(out)
           out1 = out.view(out.size(0), -1)
           out = self.linear(out1)
-        return out,out1
+        return out
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -594,7 +594,7 @@ def get_attack_features(dataset, lstm = True):
         for batch_idx, (inputs, targets) in enumerate(dataset):
                 #inputs, targets = inputs.to(device), targets.to(device)
                 inputs, targets = inputs.cuda(), targets.cuda()
-                outputs,_ = net(inputs)
+                outputs = net(inputs)
                 for i in range(len(outputs)):
                     l = criterion(outputs[i].view(1,10),targets[i].view(1))
                     losses.append(l.item())

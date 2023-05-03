@@ -66,12 +66,6 @@ if __name__ == "__main__":
               ('VGG')
               ]
 
-    models = [              ('DenseNet121'),
-              ('VGG-BiLSTM'),
-              ('VGG-LSTM'),
-              ('VGG')
-              ]
-
     for method_name in models:
         print(f"Training Attack model for {method_name}")
         models = []
