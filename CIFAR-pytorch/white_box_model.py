@@ -30,16 +30,16 @@ class build_model(keras.Model):
         vectors_slice = inputs[:, :10]
         loss_slice = inputs[:, 10:11]
         label_slice = inputs[:, 11:12]
-        if self.add_lstm:
-            lstm_slice = inputs[:, 12:int(self.neurons*self.percent)+12]
-            lstm_out = self.process_lstm(lstm_slice)
-            concat = concatenate([lstm_out, vector_out, loss_out, label_out], axis = 1)
-
         loss_out = self.loss_output(loss_slice)
         vector_out = self.vector_output(vectors_slice)
         label_out = self.label_output(label_slice)
 
         concat = concatenate([vector_out, loss_out, label_out], axis = 1)
+
+        if self.add_lstm:
+            lstm_slice = inputs[:, 12:int(self.neurons*self.percent)+12]
+            lstm_out = self.process_lstm(lstm_slice)
+            concat = concatenate([vector_out, loss_out, label_out, lstm_out], axis = 1)
 
         encoder = self.encoder(concat)
 
