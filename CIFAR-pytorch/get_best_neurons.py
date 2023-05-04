@@ -70,14 +70,6 @@ if __name__ == "__main__":
               ('VGG-LSTM'),
               ]
 
-    models = [
-              ('VGG-BiLSTM'),
-              ('VGG-LSTM'),
-              ]
-
-    layers_scores = []
-    layers_vals = []
-
     for method_name in models:
         print(f"Getting best LSTM neurons for {method_name}")
 
@@ -94,7 +86,6 @@ if __name__ == "__main__":
         accuracy = accuracy_score(y_test, rf.predict(x_test))
 
         print("LSTM Layer Accuracy " + str(accuracy))
-        layers_scores.append(accuracy)
 
         print('getting important features')
         important_features = rf.feature_importances_

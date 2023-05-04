@@ -84,8 +84,18 @@ if __name__ == "__main__":
               ('VGG')
               ]
 
+    lstm_models = [('DLA-BiLSTM'),
+              ('DLA-LSTM'),
+              ('ResNet18-BiLSTM'),
+              ('ResNet18-LSTM'),
+              ('DenseNet121-BiLSTM'),
+              ('DenseNet121-LSTM'),
+              ('VGG-BiLSTM'),
+              ('VGG-LSTM'),
+              ]
+
     add_lstm = True
-    for method_name in models:
+    for method_name in lstm_models:
         print(f"Training Attack model for {method_name}")
         models = []
         Accuracy = []
