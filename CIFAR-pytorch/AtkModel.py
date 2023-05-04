@@ -32,13 +32,31 @@ def load_data(name):
     data_file.close()
 
     y_train = shadow['Labels'].to_numpy()
-    x_train = shadow['Inputs']
+    x_train = shadow['Inputs'].to_numpy()
 
     y_test = target['Labels'].to_numpy()
-    x_test = target['Inputs']
+    x_test = target['Inputs'].to_numpy()
 
 
-    return np.array(x_train), y_train, np.array(x_test), y_test
+    return x_train, y_train, x_test, y_test
+
+def load_lstm_data(name):
+    data_file = open(f'{name}-Target-Neurons_dataframe.p', 'rb')
+    target = pickle.load(data_file)
+    data_file.close()
+
+    data_file = open(f'{name}-Shadow-Neurons_dataframe.p', 'rb')
+    shadow = pickle.load(data_file)
+    data_file.close()
+
+    y_train = shadow['Labels'].to_numpy()
+    x_train = shadow['Inputs'].to_numpy()
+
+    y_test = target['Labels'].to_numpy()
+    x_test = target['Inputs'].to_numpy()
+
+
+    return x_train, y_train, x_test, y_test
 
 def preprocess_data(inputs, labels):
     #this function is used to process the data into usable format.
@@ -66,6 +84,7 @@ if __name__ == "__main__":
               ('VGG')
               ]
 
+    add_lstm = True
     for method_name in models:
         print(f"Training Attack model for {method_name}")
         models = []
@@ -77,13 +96,17 @@ if __name__ == "__main__":
         Data = []
         scores = []
 
-        x_train, y_train, x_test, y_test = load_data(method_name)
+        if add_lstm:
+            x_train, y_train, x_test, y_test = load_lstm_data(method_name)
+        else:
+            x_train, y_train, x_test, y_test = load_data(method_name)
+
         x_train, y_train = preprocess_data(x_train, y_train)
         x_test, y_test = preprocess_data(x_test, y_test)
         input_shape = (x_train.shape[1],x_train.shape[2])
         lstm_neurons = int(x_train.shape[1] - 12)
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=7)
-        model = build_model(2,lstm_neurons,0.75,l1=128,l2=64, add_lstm = False)
+        model = build_model(2,lstm_neurons,0.20,l1=128,l2=64, add_lstm = add_lstm)
         opt = Adam(lr = 0.0001)
         model.compile(loss = 'binary_crossentropy', optimizer = opt,metrics = ['accuracy'])
         history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=64, callbacks=[callback])
