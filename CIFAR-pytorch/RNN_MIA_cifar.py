@@ -700,11 +700,11 @@ def create_cifar_dataset_torch(name, load_data = False, batch_size=128, target_t
             transforms.ToTensor()
         ])
 
-      cifar_trainset = torchvision.datasets.cifar(
+      cifar_trainset = torchvision.datasets.CIFAR10(
           root='./data', train=True, download=True, transform=transform)
 
 
-      cifar_testset = torchvision.datasets.cifar(
+      cifar_testset = torchvision.datasets.CIFAR10(
           root='./data', train=False, download=True, transform=transform)
 
       cifar_dataset = torch.utils.data.ConcatDataset([cifar_trainset, cifar_testset])
