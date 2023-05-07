@@ -315,9 +315,9 @@ class DenseNet(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+        return out, out1
 
 def DenseNet121():
     return DenseNet(Bottleneck1, [6,12,24,16], growth_rate=32)
@@ -395,9 +395,9 @@ class ResNet(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+        return out, out1
 
 
 def ResNet18():
@@ -481,9 +481,9 @@ class DLA(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+        return out, out1
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -529,9 +529,9 @@ class VGG(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+        return out,out1
 
     def _make_layers(self, cfg):
         layers = []
