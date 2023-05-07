@@ -315,8 +315,8 @@ class DenseNet(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out1 = out.view(out.size(0), -1)
-          out = self.linear(out1)
+          out = out.view(out.size(0), -1)
+          out = self.linear(out)
         return out
 
 def DenseNet121():
@@ -395,8 +395,8 @@ class ResNet(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out1 = out.view(out.size(0), -1)
-          out = self.linear(out1)
+          out = out.view(out.size(0), -1)
+          out = self.linear(out)
         return out
 
 
@@ -481,8 +481,8 @@ class DLA(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out1 = out.view(out.size(0), -1)
-          out = self.linear(out1)
+          out = out.view(out.size(0), -1)
+          out = self.linear(out)
         return out
 
 cfg = {
@@ -529,9 +529,9 @@ class VGG(nn.Module):
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out1 = out.view(out.size(0), -1)
-          out = self.linear(out1)
-        return out,out1
+          out = out.view(out.size(0), -1)
+          out = self.linear(out)
+        return out
 
     def _make_layers(self, cfg):
         layers = []
