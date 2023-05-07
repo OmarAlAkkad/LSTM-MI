@@ -94,6 +94,10 @@ if __name__ == "__main__":
               ('VGG-LSTM'),
               ]
 
+    lstm_models = [
+              ('VGG-BiLSTM'),
+              ]
+
     add_lstm = True
     for method_name in lstm_models:
         print(f"Training Attack model for {method_name}")
@@ -116,10 +120,10 @@ if __name__ == "__main__":
         input_shape = (x_train.shape[1],x_train.shape[2])
         lstm_neurons = int(x_train.shape[1] - 12)
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=7)
-        model = build_model(2,lstm_neurons,0.20,l1=128,l2=64, add_lstm = add_lstm)
+        model = build_model(2,lstm_neurons,1,l1=128,l2=64, add_lstm = add_lstm)
         opt = Adam(lr = 0.0001)
         model.compile(loss = 'binary_crossentropy', optimizer = opt,metrics = ['accuracy'])
-        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=64, callbacks=[callback])
+        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=16, callbacks=[callback])
 
         train_predictions = model.predict(x_train)
         train_predictions_labels = []

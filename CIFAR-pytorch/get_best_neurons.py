@@ -78,10 +78,10 @@ if __name__ == "__main__":
         shadow_inputs, shadow_non_lstm_inputs, shadow_labels = preprocess_data(shadow_inputs, shadow_labels)
         target_inputs, target_non_lstm_inputs, target_labels = preprocess_data(target_inputs, target_labels)
 
-        x_train, x_test, y_train, y_test = train_test_split(shadow_inputs, shadow_labels, test_size=0.25, random_state=12)
+        x_train, x_test, y_train, y_test = train_test_split(shadow_inputs, shadow_labels, stratify = shadow_labels, test_size=0.25, random_state=42)
 
         print('training random forest classifier')
-        rf = RandomForestClassifier(n_estimators=100)
+        rf = RandomForestClassifier(n_estimators=25)
         rf.fit(x_train, y_train.ravel())
         accuracy = accuracy_score(y_test, rf.predict(x_test))
 
