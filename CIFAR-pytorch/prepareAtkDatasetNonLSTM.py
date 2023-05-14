@@ -303,14 +303,14 @@ class DenseNet(nn.Module):
         out = self.trans1(self.dense1(out))
         out = self.trans2(self.dense2(out))
         out = self.trans3(self.dense3(out))
-        out1 = self.dense4(out)
-        out = F.avg_pool2d(F.relu(self.bn(out1)), 4)
+        out = self.dense4(out)
+        out = F.avg_pool2d(F.relu(self.bn(out)), 4)
         #out = out.view(out.size(0), -1)
         #out = self.linear(out)
 
         if self.enable_RNN == 'None':
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
           return out,out1
         else:
           # add LSTM
@@ -386,12 +386,12 @@ class ResNet(nn.Module):
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
-        out1 = self.layer4(out)
-        out = F.avg_pool2d(out1, 4)
+        out = self.layer4(out)
+        out = F.avg_pool2d(out, 4)
 
         if self.enable_RNN == 'None':
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
           return out,out1
         else:
           # add LSTM
@@ -473,12 +473,12 @@ class DLA(nn.Module):
         out = self.layer3(out)
         out = self.layer4(out)
         out = self.layer5(out)
-        out1 = self.layer6(out)
-        out = F.avg_pool2d(out1, 4)
+        out = self.layer6(out)
+        out = F.avg_pool2d(out, 4)
 
         if self.enable_RNN == 'None':
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
           return out,out1
         else:
           # add LSTM
@@ -523,16 +523,16 @@ class VGG(nn.Module):
 
 
     def forward(self, x):
-        out1 = self.features(x)
+        out = self.features(x)
 
         if self.enable_RNN == 'None':
-          out = out1.view(out1.size(0), -1)
-          out = self.linear(out)
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
           return out,out1
         else:
           # add LSTM
           #print(out.shape)
-          out = out1.view(out1.size(0), 1,  -1)
+          out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
           out1 = out.view(out.size(0), -1)
           out = self.linear(out1)
@@ -730,14 +730,14 @@ if __name__ == "__main__":
     nonLSTM_models = [('DLA','DLA','./Target-DLA_models/','DLA-Target'),('DLA','DLA','./Shadow-DLA_models/','DLA-Shadow'),
                    ('resnet','ResNet18','./Target-ResNet18_models/','ResNet18-Target'),('resnet','ResNet18','./Shadow-ResNet18_models/','ResNet18-Shadow'),
                    ('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),
-                    ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')  
+                    ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')
     ]
-    nonLSTM_models = [('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
+
     lstm = False
     for data,method_name,save_model_folder,name in nonLSTM_models:
         target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)
-        batch_size = 128 
-        load_pretrain_weight = True  
+        batch_size = 128
+        load_pretrain_weight = True
 
         print('==> Building model for ' + method_name)
         if method_name == 'DLA-BiLSTM':
