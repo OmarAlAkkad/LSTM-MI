@@ -47,11 +47,10 @@ class build_model(keras.Model):
 
     def process_lstm(self, inputs):
         dropout = self.dropout(inputs)
-        dense1 = self.denselstm(dropout)
-        dense2 = self.l1(dense1)
-        dense3 = self.l2(dense2)
+        dense1 = self.l1(dropout)
+        dense2 = self.l2(dense1)
 
-        return dense3
+        return dense2
 
     def loss_output(self, inputs):
         dropout = self.dropout(inputs)

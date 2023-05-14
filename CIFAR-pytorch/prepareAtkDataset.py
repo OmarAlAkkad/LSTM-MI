@@ -716,12 +716,9 @@ if __name__ == "__main__":
                ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
                ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
                ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
-    non_LSTM_models = [('DLA','DLA','./Target-DLA_models/','DLA-Target'),('DLA','DLA','./Shadow-DLA_models/','DLA-Shadow'),('resnet','ResNet18','./Target-ResNet18_models/','ResNet18-Target'),
-                       ('resnet','ResNet18','./Shadow-ResNet18_models/','ResNet18-Shadow'),('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),
-                       ('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),('VGG','VGG','./Target-VGG_models/','VGG-Target'),
-                       ('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
-    lstm = False
-    for data,method_name,save_model_folder,name in non_LSTM_models:
+
+    lstm = True
+    for data,method_name,save_model_folder,name in LSTM_models:
         target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)
         batch_size = 64  #@param {type:"integer"}
         load_pretrain_weight = True   #@param {type:"boolean"}

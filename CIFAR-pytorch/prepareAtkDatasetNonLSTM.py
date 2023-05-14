@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat May  6 19:00:26 2023
+Created on Sat Apr  8 00:05:11 2023
 
 @author: omars
 """
@@ -23,9 +23,9 @@ from sklearn.metrics import f1_score,recall_score,precision_score, confusion_mat
 import pandas as pd
 import random
 import numpy as np
-#@title (Run) Part 3: Prepare cifar10 dataset for target and shadow model
+#@title (Run) Part 3: Prepare Cifar10 dataset for target and shadow model
 import pickle
-
+classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 #@title (Run) Part 4.2: Define required functions for DLA & DLA+RNN
 class MyDataset(torch.utils.data.Dataset):
     def __init__(self, data, targets):
@@ -193,6 +193,7 @@ class Bottleneck(nn.Module):
                                planes, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(self.expansion*planes)
 
+
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion*planes:
             self.shortcut = nn.Sequential(
@@ -302,22 +303,23 @@ class DenseNet(nn.Module):
         out = self.trans1(self.dense1(out))
         out = self.trans2(self.dense2(out))
         out = self.trans3(self.dense3(out))
-        out = self.dense4(out)
-        out = F.avg_pool2d(F.relu(self.bn(out)), 4)
+        out1 = self.dense4(out)
+        out = F.avg_pool2d(F.relu(self.bn(out1)), 4)
         #out = out.view(out.size(0), -1)
         #out = self.linear(out)
 
         if self.enable_RNN == 'None':
           out = out.view(out.size(0), -1)
           out = self.linear(out)
+          return out,out1
         else:
           # add LSTM
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+          return out,out1
 
 def DenseNet121():
     return DenseNet(Bottleneck1, [6,12,24,16], growth_rate=32)
@@ -384,20 +386,21 @@ class ResNet(nn.Module):
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
-        out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
+        out1 = self.layer4(out)
+        out = F.avg_pool2d(out1, 4)
 
         if self.enable_RNN == 'None':
           out = out.view(out.size(0), -1)
           out = self.linear(out)
+          return out,out1
         else:
           # add LSTM
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+          return out,out1
 
 
 def ResNet18():
@@ -470,20 +473,21 @@ class DLA(nn.Module):
         out = self.layer3(out)
         out = self.layer4(out)
         out = self.layer5(out)
-        out = self.layer6(out)
-        out = F.avg_pool2d(out, 4)
+        out1 = self.layer6(out)
+        out = F.avg_pool2d(out1, 4)
 
         if self.enable_RNN == 'None':
           out = out.view(out.size(0), -1)
           out = self.linear(out)
+          return out,out1
         else:
           # add LSTM
           #print(out.shape)
           out = out.view(out.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+          return out,out1
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -519,19 +523,20 @@ class VGG(nn.Module):
 
 
     def forward(self, x):
-        out = self.features(x)
+        out1 = self.features(x)
 
         if self.enable_RNN == 'None':
-          out = out.view(out.size(0), -1)
+          out = out1.view(out1.size(0), -1)
           out = self.linear(out)
+          return out,out1
         else:
           # add LSTM
           #print(out.shape)
-          out = out.view(out.size(0), 1,  -1)
+          out = out1.view(out1.size(0), 1,  -1)
           out,_ = self.rnn(out)
-          out = out.view(out.size(0), -1)
-          out = self.linear(out)
-        return out
+          out1 = out.view(out.size(0), -1)
+          out = self.linear(out1)
+          return out,out1
 
     def _make_layers(self, cfg):
         layers = []
@@ -548,255 +553,156 @@ class VGG(nn.Module):
         return nn.Sequential(*layers)
 
 
-#@title (Run) Part 2: Define required functions for Data Training
-
-# Training
-def train(trainloader, epoch, batch_size=128, logfile = "train.summary"):
-    print('\nEpoch: %d' % epoch)
-    net.train()
-    train_loss = 0
-    correct = 0
-    total = 0
-
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
-        #inputs, targets = inputs.to(device), targets.to(device)
-        inputs, targets = inputs.cuda(), targets.cuda()
-        optimizer.zero_grad()
-        if inputs.shape[0] != batch_size:
-          print(inputs.shape)
-          continue
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
-        loss.backward()
-        #torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
-        optimizer.step()
-
-        train_loss += loss.item()
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-
-        if batch_idx % 30 == 0:
-                print(batch_idx, len(trainloader), 'Train Loss: %.3f | Train Acc: %.3f%% (%d/%d)'
-                     % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    print(len(trainloader), 'Epoch: %d | Train Loss: %.3f | Train Acc: %.3f%% (%d/%d)'
-                     % (epoch, train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    f = open(logfile, "a")
-    f.write('Epoch: %d | Train Loss: %.3f | Train Acc: %.3f%% (%d/%d)\n'
-                     % (epoch, train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    f.close()
-
-def test(testloader, epoch, batch_size=128, logfile = "train.summary", save_modelpath = './DLA'):
-    global best_acc
-    net.eval()
-    test_loss = 0
-    correct = 0
-    total = 0
-
-
-
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            #inputs, targets = inputs.to(device), targets.to(device)
-            inputs, targets = inputs.cuda(), targets.cuda()
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
-
-            test_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
-
-            if batch_idx % 30 == 0:
-                print(batch_idx, len(testloader), 'Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
-                         % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    print(len(testloader), 'Epoch: %d | Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
-                         % (epoch, test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    f = open(logfile, "a")
-    f.write('Epoch: %d | Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)\n'
-                         % (epoch, test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    f.close()
-    # Save checkpoint.
-    acc = 100.*correct/total
-    if acc > best_acc:
-        print('Saving..')
-        state = {
-            'net': net.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
-        }
-        if not os.path.isdir(save_modelpath):
-            os.mkdir(save_modelpath)
-        torch.save(state, save_modelpath+'/ckpt.pth')
-        best_acc = acc
-
-def draw_training_summary(filepath = 'target_train_DCA-BiLSTM.summary'):
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    with open(filepath, 'r') as f:
-        results_summary = f.read()
-
-    train_epoch = []
-    train_loss = []
-    train_acc = []
-    test_epoch = []
-    test_loss=[]
-    test_acc=[]
-    for line in results_summary.split("\n"):
-        try:
-            r_epoch = line.split('|')[0].strip().split(' ')[1]
-            r_loss = line.split('|')[1].strip().split(' ')[2].replace('%','')
-            r_acc = line.split('|')[2].strip().split(' ')[2].replace('%','')
-            if 'Train' in line:
-                train_epoch.append(int(r_epoch))
-                train_loss.append(float(r_loss))
-                train_acc.append(float(r_acc))
-            if 'Test' in line:
-                test_epoch.append(int(r_epoch))
-                test_loss.append(float(r_loss))
-                test_acc.append(float(r_acc))
-        except:
-            print(line)
-
-    # Create a new figure and plot the data
-    plt.figure(figsize=(12,4))
-
-    plt.subplot(1,2,1)
-    plt.plot(train_acc, label='Train')
-    plt.plot(test_acc, label='Test')
-    plt.axhline(y=np.max(test_acc), color='r', linestyle='--')
-    # Add text for the horizontal line
-    plt.text(test_epoch[-10], np.max(test_acc)*1.05, np.max(test_acc), color='r', fontsize=10)
-    # Customize the plot
-    plt.title('Accuracy Curve')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
-
-    plt.subplot(1,2,2)
-    plt.plot(train_loss, label='Train')
-    plt.plot(test_loss, label='Test')
-
-    # Customize the plot
-    plt.title('Loss Curve')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-
-    # Display the plot
-    plt.show()
-#@title (Run) Part 3: Prepare cifar10 dataset for target and shadow model
-
-classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-
-def create_cifar_dataset_torch(name, load_data = False, batch_size=128, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000):
-
-  # Data
-  print('==> Preparing data..')
-  if not load_data:
-
-      transform = transforms.Compose([
-            transforms.ToTensor()
-        ])
-
-      cifar_trainset = torchvision.datasets.CIFAR10(
-          root='./data', train=True, download=True, transform=transform)
-
-
-      cifar_testset = torchvision.datasets.CIFAR10(
-          root='./data', train=False, download=True, transform=transform)
-
-      cifar_dataset = torch.utils.data.ConcatDataset([cifar_trainset, cifar_testset])
-
-
-      #target_train_size = int(0.25 * len(cifar_dataset)) # 15000
-      remain_size = len(cifar_dataset) - target_train_size
-      target_train_dataset, remain_dataset = torch.utils.data.random_split(cifar_dataset, [target_train_size, remain_size])
-
-      #target_test_size = int(0.25 * len(cifar_dataset)) # 15000
-      remain_size = len(remain_dataset) - target_test_size
-      target_test_dataset, remain_dataset = torch.utils.data.random_split(remain_dataset, [target_test_size, remain_size])
-
-      #target_test_dataset, remain_dataset = balance_val_split(remain_dataset, train_size=target_test_size)
-
-
-      #shadow_train_size = int(0.25 * len(cifar_dataset)) # 15000
-      remain_size = len(remain_dataset) - shadow_train_size
-      shadow_train_dataset, shadow_test_dataset = torch.utils.data.random_split(remain_dataset, [shadow_train_size, remain_size])
-      #shadow_train_dataset, shadow_test_dataset = balance_val_split(remain_dataset, train_size=shadow_train_size)
-
-      print("Setting target_train_dataset size to ",len(target_train_dataset), count_label_frequency(target_train_dataset))
-      print("Setting target_test_dataset size to ",len(target_test_dataset), count_label_frequency(target_test_dataset))
-      print("Setting shadow_train_dataset size to ",len(shadow_train_dataset), count_label_frequency(shadow_train_dataset))
-      print("Setting shadow_test_dataset size to ",len(shadow_test_dataset), count_label_frequency(shadow_test_dataset))
-      #print("Setting testset size to ",len(testset))
-
-
-
-      '''
-      transform_train = transforms.Compose([
-          transforms.RandomCrop(32, padding=4),
-          transforms.RandomHorizontalFlip(),
-          transforms.ToTensor(),
-          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-      ])
-      '''
-
-
-
-      transform_train = transforms.Compose([
-          transforms.RandomCrop(32, padding=4),
-          custom_transform,
-          transforms.ToTensor(),
-          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-      ])
-
-      transform_test = transforms.Compose([
-          transforms.ToTensor(),
-          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-      ])
-
-      # apply the data augmentation transformations to the subset
-      target_train_dataset.dataset.transform = transform_train
-      # Load the transformed subset using a DataLoader
-      target_trainloader = DataLoader(target_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-
-
-      target_test_dataset.dataset.transform = transform_test
-      # Load the transformed subset using a DataLoader
-      target_testloader = DataLoader(target_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-
-
-      # apply the data augmentation transformations to the subset
-      shadow_train_dataset.dataset.transform = transform_train
-      # Load the transformed subset using a DataLoader
-      shadow_trainloader = DataLoader(shadow_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-
-
-      shadow_test_dataset.dataset.transform = transform_test
-      # Load the transformed subset using a DataLoader
-      shadow_testloader = DataLoader(shadow_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-
-      pickle.dump(target_trainloader, open(f'target_trainloader_{name}.p', 'wb'))
-      pickle.dump(target_testloader, open(f'target_testloader_{name}.p', 'wb'))
-      pickle.dump(shadow_trainloader, open(f'shadow_trainloader_{name}.p', 'wb'))
-      pickle.dump(shadow_testloader, open(f'shadow_test_dataset_{name}.p', 'wb'))
-
-  data_file = open(f'target_trainloader_{name}.p', 'rb')
+def load_data(model):
+  print(f"Loading Data for {model}")
+  data_file = open(f'target_trainloader_{model}.p', 'rb')
   target_trainloader = pickle.load(data_file)
   data_file.close()
-  data_file = open(f'target_testloader_{name}.p', 'rb')
+  data_file = open(f'target_testloader_{model}.p', 'rb')
   target_testloader = pickle.load(data_file)
   data_file.close()
-  data_file = open(f'shadow_trainloader_{name}.p', 'rb')
+  data_file = open(f'shadow_trainloader_{model}.p', 'rb')
   shadow_trainloader = pickle.load(data_file)
   data_file.close()
-  data_file = open(f'shadow_test_dataset_{name}.p', 'rb')
+  data_file = open(f'shadow_test_dataset_{model}.p', 'rb')
   shadow_testloader = pickle.load(data_file)
   data_file.close()
 
   return target_trainloader, target_testloader, shadow_trainloader, shadow_testloader
+
+def get_attack_features(dataset, lstm = True):
+    print("Getting Attack Features")
+    predictions = []
+    labels = []
+    losses = []
+    lstm_list = []
+    internals_list = []
+    softmax = torch.nn.Softmax(dim=1)
+    if lstm:
+        for batch_idx, (inputs, targets) in enumerate(dataset):
+                #inputs, targets = inputs.to(device), targets.to(device)
+                inputs, targets = inputs.cuda(), targets.cuda()
+                outputs, lstm_neurons = net(inputs)
+                for i in range(len(outputs)):
+                    l = criterion(outputs[i].view(1,10),targets[i].view(1))
+                    losses.append(l.item())
+                outputs = softmax(outputs)
+                predictions.extend(outputs.tolist())
+                lstm_list.extend(lstm_neurons.tolist())
+                labels.extend(targets.tolist())
+        predictions_labels = []
+        for pred in predictions:
+            predictions_labels.append(np.argmax(pred, axis=0))
+
+        return predictions,labels,losses, predictions_labels,lstm_list
+
+    else:
+        for batch_idx, (inputs, targets) in enumerate(dataset):
+                #inputs, targets = inputs.to(device), targets.to(device)
+                inputs, targets = inputs.cuda(), targets.cuda()
+                outputs,internal_neurons = net(inputs)
+                for i in range(len(outputs)):
+                    l = criterion(outputs[i].view(1,10),targets[i].view(1))
+                    losses.append(l.item())
+                outputs = softmax(outputs)
+                predictions.extend(outputs.tolist())
+                internals_list.extend(internal_neurons.tolist())
+                labels.extend(targets.tolist())
+
+        predictions_labels = []
+        for pred in predictions:
+            predictions_labels.append(np.argmax(pred, axis=0))
+
+        return predictions,labels,losses, predictions_labels, internals_list
+
+def prepare_dataframe(inputs,all_labels,predictions,labels,losses,internals, label = 1,include_losses = True, include_labels = True, include_internal = True):
+    print("Preparing data frame")
+    for i in range(len(predictions)):
+        if include_losses:
+            predictions[i].append(losses[i])
+        if include_labels:
+            predictions[i].append(labels[i])
+        if include_internal:
+          predictions[i].append(internals[i])
+
+        inputs.append(predictions[i])
+        all_labels.append(label)
+
+    return inputs, all_labels
+
+def prepare_lstm_dataframe(inputs,all_labels,predictions,labels,losses,lstm,label = 1,include_losses = True, include_labels = True, include_lstm = True):
+    print("Preparing LSTM data frame")
+    for i in range(len(predictions)):
+        if include_losses:
+            predictions[i].append(losses[i])
+        if include_labels:
+            predictions[i].append(labels[i])
+        if include_lstm:
+            predictions[i].extend(lstm[i])
+        inputs.append(predictions[i])
+        all_labels.append(label)
+
+    return inputs, all_labels
+
+def create_dataframe(name, inputs, all_labels):
+    print(f"creating data frame for {name}")
+    temp = list(zip(inputs, all_labels))
+    random.shuffle(temp)
+    inputs, all_labels = zip(*temp)
+    inputs, all_labels = list(inputs), list(all_labels)
+    d = {
+        'Inputs': inputs,
+        'Labels': all_labels
+        }
+    dataframe = pd.DataFrame(data=d)
+
+    pickle.dump(dataframe, open(f'{name}_dataframe.p', 'wb'))
+
+    return dataframe
+
+def create_statistics_dataframe(name,train_predictions_labels, y_train_label, test_predictions_labels, y_test_label):
+    print(f"creating statistics dataframe {name}")
+    sets = ["train", "test"]
+    models = []
+    Accuracy = []
+    Precision = []
+    Recall = []
+    Negative_Recall = []
+    F1_Score = []
+    Data = []
+    for set_type in sets:
+        locals()[f'{set_type}_accuracy'] = accuracy_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'])
+        locals()[f'confusion_matrix_{set_type}'] = confusion_matrix(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'])
+        locals()[f'TN_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][0][0]
+        locals()[f'FP_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][0][1]
+        locals()[f'FN_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][1][0]
+        locals()[f'TP_{set_type}'] = locals()[f'confusion_matrix_{set_type}'][1][1]
+        locals()[f'Negative_recall_{set_type}'] = locals()[f'TN_{set_type}'] / (locals()[f'TN_{set_type}'] + locals()[f'FP_{set_type}'])
+        locals()[f'precision_{set_type}'] = precision_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'],average='macro')
+        locals()[f'recall_{set_type}'] = recall_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'],average='macro')
+
+        locals()[f'f1_{set_type}'] = f1_score(locals()[f'y_{set_type}_label'], locals()[f'{set_type}_predictions_labels'], average='macro')
+        models.append(f'model')
+        Data.append(set_type)
+        Accuracy.append(locals()[f'{set_type}_accuracy'])
+        Precision.append(locals()[f'precision_{set_type}'])
+        Recall.append(locals()[f'recall_{set_type}'])
+        Negative_Recall.append( locals()[f'Negative_recall_{set_type}'])
+        F1_Score.append(locals()[f'f1_{set_type}'])
+
+    d = pd.DataFrame({'Model' : models,
+         'Data': Data,
+         'Accuracy': Accuracy,
+         'Precision': Precision,
+         'Recall': Recall,
+         'Negative Recall': Negative_Recall,
+         'F1 Score': F1_Score,
+         })
+
+    d.to_csv(f'{name}.csv')
+
+    return d
+
 
 if __name__ == "__main__":
     models = [('DLA','DLA-BiLSTM','./Target-DLA-BiLSTM_models/','DLA-BiLSTM-Target'),('DLA','DLA-BiLSTM','./Shadow-DLA-BiLSTM_models/','DLA-BiLSTM-Shadow'),
@@ -812,12 +718,27 @@ if __name__ == "__main__":
               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
               ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
 
-    models = [('resnet','ResNet18','./Target-ResNet18_models/','ResNet18-Target'),('resnet','ResNet18','./Shadow-ResNet18_models/','ResNet18-Shadow')]
-    for data,method_name,save_model_folder,name in models:
+    LSTM_models =[('DLA','DLA-BiLSTM','./Target-DLA-BiLSTM_models/','DLA-BiLSTM-Target'),('DLA','DLA-BiLSTM','./Shadow-DLA-BiLSTM_models/','DLA-BiLSTM-Shadow'),
+               ('DLA','DLA-LSTM','./Target-DLA-LSTM_models/','DLA-LSTM-Target'),('DLA','DLA-LSTM','./Shadow-DLA-LSTM_models/','DLA-LSTM-Shadow'),
+               ('resnet','ResNet18-BiLSTM','./Target-ResNet18-BiLSTM_models/','ResNet18-BiLSTM-Target'),('resnet','ResNet18-BiLSTM','./Shadow-ResNet18-BiLSTM_models/','ResNet18-BiLSTM-Shadow'),
+               ('resnet','ResNet18-LSTM','./Target-ResNet18-LSTM_models/','ResNet18-LSTM-Target'),('resnet','ResNet18-LSTM','./Shadow-ResNet18-LSTM_models/','ResNet18-LSTM-Shadow'),
+               ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
+               ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
+               ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
+               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
 
-        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = create_cifar_dataset_torch(data, load_data = False, batch_size=64, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000)
-        batch_size = 64  #@param {type:"integer"}
-        load_pretrain_weight = False   #@param {type:"boolean"}
+    nonLSTM_models = [('DLA','DLA','./Target-DLA_models/','DLA-Target'),('DLA','DLA','./Shadow-DLA_models/','DLA-Shadow'),
+                   ('resnet','ResNet18','./Target-ResNet18_models/','ResNet18-Target'),('resnet','ResNet18','./Shadow-ResNet18_models/','ResNet18-Shadow'),
+                   ('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),
+                    ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')  
+    ]
+    nonLSTM_models = [('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
+    lstm = False
+    for data,method_name,save_model_folder,name in nonLSTM_models:
+        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)
+        batch_size = 128 
+        load_pretrain_weight = True  
+
         print('==> Building model for ' + method_name)
         if method_name == 'DLA-BiLSTM':
           # Model
@@ -892,18 +813,34 @@ if __name__ == "__main__":
         pytorch_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
         print("Total trained parameters: ",pytorch_total_params)
 
-        max_epoch = 30  #@param {type:"integer"}
-        train_result_summary = f'{name}.summary'   #@param {type:"string"}
-
-        best_acc = 0  # best test accuracy
-        start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-
-        if not load_pretrain_weight:
-            f = open(train_result_summary, "w")
-            f.write('')
-            f.close()
-
-        for epoch in range(start_epoch, start_epoch+max_epoch):
-            train(target_trainloader, epoch, batch_size=batch_size, logfile = train_result_summary)
-            test(target_testloader, epoch, batch_size=batch_size, logfile = train_result_summary, save_modelpath = save_model_folder)
+        if name[-1] == 't':
+            if lstm:
+                target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels,target_train_lstm = get_attack_features(target_trainloader,lstm)
+                target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels,target_test_lstm = get_attack_features(target_testloader,lstm)
+                target_inputs, target_labels = [], []
+                target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,target_train_lstm, label = 1,include_losses = True, include_labels = True,include_lstm = True)
+                target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,target_train_lstm, label = 0,include_losses = True, include_labels = True,include_lstm = True)
+            else:
+                target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels,target_train_neurons = get_attack_features(target_trainloader,lstm)
+                target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels, target_test_neurons = get_attack_features(target_testloader,lstm)
+                target_inputs, target_labels = [], []
+                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,target_train_neurons,label = 1,include_losses = True, include_labels = True, include_internal = True)
+                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,target_test_neurons,label = 0,include_losses = True, include_labels = True,include_internal = True)
+            target_dataframe = create_dataframe(name, target_inputs, target_labels)
+            target_d = create_statistics_dataframe(name,target_train_prediction_labels, target_train_labels, target_test_prediction_labels, target_test_labels)
+        elif name[-1] == 'w':
+            if lstm:
+                shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels, shadow_train_lstm = get_attack_features(shadow_trainloader,lstm)
+                shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_prediction_labels, shadow_test_lstm = get_attack_features(shadow_testloader,lstm)
+                shadow_inputs, shadow_labels = [], []
+                shadow_inputs, shadow_labels = prepare_lstm_dataframe(shadow_inputs, shadow_labels,shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_lstm,label = 1,include_losses = True, include_labels = True, include_lstm = True)
+                shadow_inputs, shadow_labels = prepare_lstm_dataframe(shadow_inputs, shadow_labels,shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_lstm,label = 0,include_losses = True, include_labels = True, include_lstm = True)
+            else:
+                shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels,shadow_train_neurons = get_attack_features(shadow_trainloader,lstm)
+                shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_prediction_labels,shadow_test_neurons = get_attack_features(shadow_testloader,lstm)
+                shadow_inputs, shadow_labels = [], []
+                shadow_inputs, shadow_labels = prepare_dataframe(shadow_inputs, shadow_labels,shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_neurons,label = 1,include_losses = True, include_labels = True,include_internal = True)
+                shadow_inputs, shadow_labels = prepare_dataframe(shadow_inputs, shadow_labels,shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_neurons,label = 0,include_losses = True, include_labels = True,include_internal = True)
+            shadow_dataframe = create_dataframe(name, shadow_inputs, shadow_labels)
+            shadow_d = create_statistics_dataframe(name,shadow_train_prediction_labels, shadow_train_labels, shadow_test_prediction_labels, shadow_test_labels)
 
