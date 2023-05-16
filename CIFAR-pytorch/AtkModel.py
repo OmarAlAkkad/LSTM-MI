@@ -49,10 +49,10 @@ def load_lstm_data(name):
     shadow = pickle.load(data_file)
     data_file.close()
 
-    y_train = shadow['Labels'].to_numpy()
+    y_train = shadow['Labels']
     x_train = shadow['Inputs'].to_numpy()
 
-    y_test = target['Labels'].to_numpy()
+    y_test = target['Labels']
     x_test = target['Inputs'].to_numpy()
 
 
@@ -65,8 +65,8 @@ def preprocess_data(inputs, labels):
     inputs=np.array([np.array(xi) for xi in inputs])
     inputs = inputs.reshape(-1, elements, 1)
     #one hot encode labels
-    labels = tf.keras.utils.to_categorical(labels, 2)
-    labels = np.array(labels)
+    # labels = tf.keras.utils.to_categorical(labels, 2)
+    labels = np.array(labels).astype(np.float64)
     return inputs, labels
 
 if __name__ == "__main__":
@@ -94,14 +94,15 @@ if __name__ == "__main__":
               ('VGG-LSTM'),
               ]
 
-    lstm_models = [('DLA'),
-              ('ResNet18'),
-              ('DenseNet121'),
+    nonlstm_models = [
+              # ('DLA'),
+              # ('ResNet18'),
+              # ('DenseNet121'),
               ('VGG'),
               ]
 
-    add_lstm = False
-    for method_name in lstm_models:
+    add_lstm = True
+    for method_name in nonlstm_models:
         print(f"Training Attack model for {method_name}")
         models = []
         Accuracy = []
@@ -121,16 +122,16 @@ if __name__ == "__main__":
         x_test, y_test = preprocess_data(x_test, y_test)
         input_shape = (x_train.shape[1],x_train.shape[2])
         lstm_neurons = int(x_train.shape[1] - 12)
-        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=7)
-        model = build_model(2,lstm_neurons,1,l1=128,l2=64, add_lstm = add_lstm)
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+        model = build_model(1,lstm_neurons,0.005,l1=128,l2=64, add_lstm = add_lstm)
         opt = Adam(lr = 0.0001)
-        model.compile(loss = 'categorical_crossentropy', optimizer = opt,metrics = ['accuracy'])
-        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=16, callbacks=[callback])
+        model.compile(loss = 'binary_crossentropy', optimizer = opt,metrics = ['accuracy'])
+        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=64, callbacks=[callback])
 
         train_predictions = model.predict(x_train)
         train_predictions_labels = []
         for pred in train_predictions:
-            if pred[1] > pred[0]:
+            if pred > 0.5:
                 train_predictions_labels.append(1)
             else:
                 train_predictions_labels.append(0)
@@ -138,21 +139,21 @@ if __name__ == "__main__":
         test_predictions = model.predict(x_test)
         test_predictions_labels = []
         for pred in test_predictions:
-            if pred[1] > pred[0]:
+            if pred > 0.5:
                 test_predictions_labels.append(1)
             else:
                 test_predictions_labels.append(0)
 
         y_train_label = []
         for pred in y_train:
-            if pred[1] > pred[0]:
+            if pred > 0.5:
                 y_train_label.append(1)
             else:
                 y_train_label.append(0)
 
         y_test_label = []
         for pred in y_test:
-            if pred[1] > pred[0]:
+            if pred > 0.5:
                 y_test_label.append(1)
             else:
                 y_test_label.append(0)

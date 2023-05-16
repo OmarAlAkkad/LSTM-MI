@@ -812,10 +812,13 @@ if __name__ == "__main__":
               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
               ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
 
-    models = [('resnet','ResNet18','./Target-ResNet18_models/','ResNet18-Target'),('resnet','ResNet18','./Shadow-ResNet18_models/','ResNet18-Shadow')]
+    models = [('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
+              ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
+              ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
+
     for data,method_name,save_model_folder,name in models:
 
-        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = create_cifar_dataset_torch(data, load_data = False, batch_size=64, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000)
+        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = create_cifar_dataset_torch(data, load_data = True, batch_size=64, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000)
         batch_size = 64  #@param {type:"integer"}
         load_pretrain_weight = False   #@param {type:"boolean"}
         print('==> Building model for ' + method_name)
@@ -903,7 +906,15 @@ if __name__ == "__main__":
             f.write('')
             f.close()
 
-        for epoch in range(start_epoch, start_epoch+max_epoch):
-            train(target_trainloader, epoch, batch_size=batch_size, logfile = train_result_summary)
-            test(target_testloader, epoch, batch_size=batch_size, logfile = train_result_summary, save_modelpath = save_model_folder)
+        if name[-1] == 't':
+            for epoch in range(start_epoch, start_epoch+max_epoch):
+                train(target_trainloader, epoch, batch_size=batch_size, logfile = train_result_summary)
+                test(target_testloader, epoch, batch_size=batch_size, logfile = train_result_summary, save_modelpath = save_model_folder)
+
+        elif name[-1] == 'w':
+            for epoch in range(start_epoch, start_epoch+max_epoch):
+                train(shadow_trainloader, epoch, batch_size=batch_size, logfile = train_result_summary)
+                test(shadow_testloader, epoch, batch_size=batch_size, logfile = train_result_summary, save_modelpath = save_model_folder)
+
+
 

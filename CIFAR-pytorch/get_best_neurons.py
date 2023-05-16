@@ -70,7 +70,13 @@ if __name__ == "__main__":
               ('VGG-LSTM'),
               ]
 
-    for method_name in models:
+    nonlstm_models = [('DLA'),
+              ('ResNet18'),
+              ('DenseNet121'),
+              ('VGG'),
+              ]
+
+    for method_name in nonlstm_models:
         print(f"Getting best LSTM neurons for {method_name}")
 
         shadow_inputs, shadow_labels, target_inputs, target_labels = load_data(method_name)

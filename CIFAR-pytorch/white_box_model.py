@@ -24,7 +24,7 @@ class build_model(keras.Model):
         self.dense256_e1 = Dense(256, activation = 'relu')
         self.dense128 = Dense(128, activation = 'relu')
         self.dense64 = Dense(64, activation = 'relu')
-        self.outputlayer = Dense(nClasses,activation = 'softmax')
+        self.outputlayer = Dense(nClasses,activation = 'sigmoid')
 
     def call(self, inputs):
         vectors_slice = inputs[:, :10]

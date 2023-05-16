@@ -623,7 +623,7 @@ def prepare_dataframe(inputs,all_labels,predictions,labels,losses,internals, lab
         if include_labels:
             predictions[i].append(labels[i])
         if include_internal:
-          predictions[i].append(internals[i])
+            predictions[i].extend(internals[i])
 
         inputs.append(predictions[i])
         all_labels.append(label)
@@ -727,16 +727,21 @@ if __name__ == "__main__":
                ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
                ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
 
-    nonLSTM_models = [('DLA','DLA','./Target-DLA_models/','DLA-Target'),('DLA','DLA','./Shadow-DLA_models/','DLA-Shadow'),
-                   ('resnet','ResNet18','./Target-ResNet18_models/','ResNet18-Target'),('resnet','ResNet18','./Shadow-ResNet18_models/','ResNet18-Shadow'),
-                   ('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),
+    nonLSTM_models = [
+                    ('DLA','DLA','./Target-DLA_models/','DLA-Target'),('DLA','DLA','./Shadow-DLA_models/','DLA-Shadow'),
+                    ('resnet','ResNet18','./Target-ResNet18_models/','ResNet18-Target'),('resnet','ResNet18','./Shadow-ResNet18_models/','ResNet18-Shadow'),
+                    ('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),
+                    ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')
+    ]
+
+    nonLSTM_models = [
                     ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')
     ]
 
     lstm = False
     for data,method_name,save_model_folder,name in nonLSTM_models:
         target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)
-        batch_size = 128
+        batch_size = 8
         load_pretrain_weight = True
 
         print('==> Building model for ' + method_name)
