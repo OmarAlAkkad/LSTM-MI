@@ -734,10 +734,6 @@ if __name__ == "__main__":
                     ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')
     ]
 
-    nonLSTM_models = [
-                    ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')
-    ]
-
     lstm = False
     for data,method_name,save_model_folder,name in nonLSTM_models:
         target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)
