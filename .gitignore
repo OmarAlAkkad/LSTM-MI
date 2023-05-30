@@ -6,3 +6,4 @@
 *.tar*
 *.pth
 *.pyc
+*.bin
