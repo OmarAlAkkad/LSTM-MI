@@ -101,13 +101,14 @@ if __name__ == "__main__":
               ('VGG'),
               ]
 
-    models = [('DenseNet121-BiLSTM'),
-              ('DenseNet121-LSTM'),
-              ('DenseNet121'),
-              ('VGG-BiLSTM'),
-              ('VGG-LSTM'),
-              ('VGG')
-              ]
+    # models = [
+    #            ('DenseNet121-BiLSTM'),
+    #            ('DenseNet121-LSTM'),
+    #            ('DenseNet121'),
+    #            ('VGG-BiLSTM'),
+    #            ('VGG-LSTM'),
+    #            ('VGG')
+    #           ]
 
     add_lstm = False
     for method_name in models:
@@ -131,10 +132,10 @@ if __name__ == "__main__":
         input_shape = (x_train.shape[1],x_train.shape[2])
         lstm_neurons = int(x_train.shape[1] - 12)
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
-        model = build_model(1,lstm_neurons,0.1,l1=128,l2=64, add_lstm = add_lstm, add_vector=True,add_label=False,add_loss=False)
+        model = build_model(1,lstm_neurons,1,l1=128,l2=64, add_lstm = add_lstm, add_vector=True,add_label=True,add_loss=True)
         opt = Adam(lr = 0.0001)
         model.compile(loss = 'binary_crossentropy', optimizer = opt,metrics = ['accuracy'])
-        history = model.fit(x_train, y_train, epochs = 100, validation_data = (x_test, y_test), verbose =1,batch_size=256 ,callbacks=[callback])
+        history = model.fit(x_train, y_train, epochs = 30, validation_data = (x_test, y_test), verbose =1,batch_size=256 ,callbacks=[callback])
 
         train_predictions = model.predict(x_train)
         train_predictions_labels = []

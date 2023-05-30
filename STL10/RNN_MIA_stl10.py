@@ -695,7 +695,7 @@ def create_stl10_dataset_torch(name, load_data = True, batch_size=128, target_tr
   # Data
   print('==> Preparing data..')
   if load_data:
-      
+
     try:
           data_file = open(f'target_trainloader_{name}.p', 'rb')
           target_trainloader = pickle.load(data_file)
@@ -709,47 +709,48 @@ def create_stl10_dataset_torch(name, load_data = True, batch_size=128, target_tr
           data_file = open(f'shadow_test_dataset_{name}.p', 'rb')
           shadow_testloader = pickle.load(data_file)
           data_file.close()
-    
-    except:     
+
+    except:
 
           transform = transforms.Compose([
+              transforms.Resize((32, 32)),
                 transforms.ToTensor()
             ])
-    
+
           stl10_trainset = torchvision.datasets.STL10(
               root='./data', split = 'train', download=True, transform=transform)
-    
-    
+
+
           stl10_testset = torchvision.datasets.STL10 (
               root='./data', split = 'test', download=True, transform=transform)
-    
+
           stl10_dataset = torch.utils.data.ConcatDataset([stl10_trainset, stl10_testset])
-    
-    
+
+
           #target_train_size = int(0.25 * len(stl10_dataset)) # 15000
           remain_size = len(stl10_dataset) - target_train_size
           target_train_dataset, remain_dataset = torch.utils.data.random_split(stl10_dataset, [target_train_size, remain_size])
-    
+
           #target_test_size = int(0.25 * len(stl10_dataset)) # 15000
           remain_size = len(remain_dataset) - target_test_size
           target_test_dataset, remain_dataset = torch.utils.data.random_split(remain_dataset, [target_test_size, remain_size])
-    
+
           #target_test_dataset, remain_dataset = balance_val_split(remain_dataset, train_size=target_test_size)
-    
-    
+
+
           #shadow_train_size = int(0.25 * len(stl10_dataset)) # 15000
           remain_size = len(remain_dataset) - shadow_train_size
           shadow_train_dataset, shadow_test_dataset = torch.utils.data.random_split(remain_dataset, [shadow_train_size, remain_size])
           #shadow_train_dataset, shadow_test_dataset = balance_val_split(remain_dataset, train_size=shadow_train_size)
-    
+
           print("Setting target_train_dataset size to ",len(target_train_dataset), count_label_frequency(target_train_dataset))
           print("Setting target_test_dataset size to ",len(target_test_dataset), count_label_frequency(target_test_dataset))
           print("Setting shadow_train_dataset size to ",len(shadow_train_dataset), count_label_frequency(shadow_train_dataset))
           print("Setting shadow_test_dataset size to ",len(shadow_test_dataset), count_label_frequency(shadow_test_dataset))
           #print("Setting testset size to ",len(testset))
-    
-    
-    
+
+
+
           '''
           transform_train = transforms.Compose([
               transforms.RandomCrop(32, padding=4),
@@ -758,42 +759,42 @@ def create_stl10_dataset_torch(name, load_data = True, batch_size=128, target_tr
               transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
           ])
           '''
-    
-    
-    
+
+
+
           transform_train = transforms.Compose([
               transforms.RandomCrop(32, padding=4),
               custom_transform,
               transforms.ToTensor(),
               transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
           ])
-    
+
           transform_test = transforms.Compose([
               transforms.ToTensor(),
               transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
           ])
-    
+
           # apply the data augmentation transformations to the subset
           target_train_dataset.dataset.transform = transform_train
           # Load the transformed subset using a DataLoader
           target_trainloader = DataLoader(target_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-    
-    
+
+
           target_test_dataset.dataset.transform = transform_test
           # Load the transformed subset using a DataLoader
           target_testloader = DataLoader(target_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-    
-    
+
+
           # apply the data augmentation transformations to the subset
           shadow_train_dataset.dataset.transform = transform_train
           # Load the transformed subset using a DataLoader
           shadow_trainloader = DataLoader(shadow_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-    
-    
+
+
           shadow_test_dataset.dataset.transform = transform_test
           # Load the transformed subset using a DataLoader
           shadow_testloader = DataLoader(shadow_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-    
+
           pickle.dump(target_trainloader, open(f'target_trainloader_{name}.p', 'wb'))
           pickle.dump(target_testloader, open(f'target_testloader_{name}.p', 'wb'))
           pickle.dump(shadow_trainloader, open(f'shadow_trainloader_{name}.p', 'wb'))
@@ -801,43 +802,44 @@ def create_stl10_dataset_torch(name, load_data = True, batch_size=128, target_tr
 
     else:
           transform = transforms.Compose([
+              transforms.Resize((32, 32)),
                 transforms.ToTensor()
             ])
-        
+
           stl10_trainset = torchvision.datasets.STL10(
               root='./data', train=True, download=True, transform=transform)
-        
-        
+
+
           stl10_testset = torchvision.datasets.STL10 (
               root='./data', train=False, download=True, transform=transform)
-        
+
           stl10_dataset = torch.utils.data.ConcatDataset([stl10_trainset, stl10_testset])
-        
-        
+
+
           #target_train_size = int(0.25 * len(stl10_dataset)) # 15000
           remain_size = len(stl10_dataset) - target_train_size
           target_train_dataset, remain_dataset = torch.utils.data.random_split(stl10_dataset, [target_train_size, remain_size])
-        
+
           #target_test_size = int(0.25 * len(stl10_dataset)) # 15000
           remain_size = len(remain_dataset) - target_test_size
           target_test_dataset, remain_dataset = torch.utils.data.random_split(remain_dataset, [target_test_size, remain_size])
-        
+
           #target_test_dataset, remain_dataset = balance_val_split(remain_dataset, train_size=target_test_size)
-        
-        
+
+
           #shadow_train_size = int(0.25 * len(stl10_dataset)) # 15000
           remain_size = len(remain_dataset) - shadow_train_size
           shadow_train_dataset, shadow_test_dataset = torch.utils.data.random_split(remain_dataset, [shadow_train_size, remain_size])
           #shadow_train_dataset, shadow_test_dataset = balance_val_split(remain_dataset, train_size=shadow_train_size)
-        
+
           print("Setting target_train_dataset size to ",len(target_train_dataset), count_label_frequency(target_train_dataset))
           print("Setting target_test_dataset size to ",len(target_test_dataset), count_label_frequency(target_test_dataset))
           print("Setting shadow_train_dataset size to ",len(shadow_train_dataset), count_label_frequency(shadow_train_dataset))
           print("Setting shadow_test_dataset size to ",len(shadow_test_dataset), count_label_frequency(shadow_test_dataset))
           #print("Setting testset size to ",len(testset))
-        
-        
-        
+
+
+
           '''
           transform_train = transforms.Compose([
               transforms.RandomCrop(32, padding=4),
@@ -846,42 +848,42 @@ def create_stl10_dataset_torch(name, load_data = True, batch_size=128, target_tr
               transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
           ])
           '''
-        
-        
-        
+
+
+
           transform_train = transforms.Compose([
               transforms.RandomCrop(32, padding=4),
               custom_transform,
               transforms.ToTensor(),
               transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
           ])
-        
+
           transform_test = transforms.Compose([
               transforms.ToTensor(),
               transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
           ])
-        
+
           # apply the data augmentation transformations to the subset
           target_train_dataset.dataset.transform = transform_train
           # Load the transformed subset using a DataLoader
           target_trainloader = DataLoader(target_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-        
-        
+
+
           target_test_dataset.dataset.transform = transform_test
           # Load the transformed subset using a DataLoader
           target_testloader = DataLoader(target_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-        
-        
+
+
           # apply the data augmentation transformations to the subset
           shadow_train_dataset.dataset.transform = transform_train
           # Load the transformed subset using a DataLoader
           shadow_trainloader = DataLoader(shadow_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-        
-        
+
+
           shadow_test_dataset.dataset.transform = transform_test
           # Load the transformed subset using a DataLoader
           shadow_testloader = DataLoader(shadow_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
-        
+
           pickle.dump(target_trainloader, open(f'target_trainloader_{name}.p', 'wb'))
           pickle.dump(target_testloader, open(f'target_testloader_{name}.p', 'wb'))
           pickle.dump(shadow_trainloader, open(f'shadow_trainloader_{name}.p', 'wb'))
@@ -904,7 +906,11 @@ if __name__ == "__main__":
               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
               ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
 
-    models = [('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
+    models = [
+              ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
+              ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
+              ('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),
+              ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
               ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
 

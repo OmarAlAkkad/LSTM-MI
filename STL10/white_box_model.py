@@ -47,7 +47,7 @@ class build_model(keras.Model):
 
         if self.add_label:
             to_concat.append(label_out)
-            
+
         if self.add_lstm:
             lstm_slice = inputs[:, 12:int(self.neurons*self.percent)+12]
             lstm_out = self.process_lstm(lstm_slice)
@@ -55,8 +55,9 @@ class build_model(keras.Model):
 
         if len(to_concat) != 1:
             concat = concatenate(to_concat, axis = 1)
+        else:
+            concat = to_concat[0]
 
-        concat = vector_out
         encoder = self.encoder(concat)
 
         return encoder
