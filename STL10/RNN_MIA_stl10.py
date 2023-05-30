@@ -807,11 +807,11 @@ def create_stl10_dataset_torch(name, load_data = True, batch_size=128, target_tr
             ])
 
           stl10_trainset = torchvision.datasets.STL10(
-              root='./data', train=True, download=True, transform=transform)
+              root='./data', split='train', download=True, transform=transform)
 
 
           stl10_testset = torchvision.datasets.STL10 (
-              root='./data', train=False, download=True, transform=transform)
+              root='./data', split='test', download=True, transform=transform)
 
           stl10_dataset = torch.utils.data.ConcatDataset([stl10_trainset, stl10_testset])
 
