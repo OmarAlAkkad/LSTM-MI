@@ -4,9 +4,13 @@ from tensorflow.keras.layers import concatenate
 
 class build_model(keras.Model):
 
-    def __init__(self, nClasses,lstm_neurons, percentage_neurons,l1=128, l2=64, add_lstm = True):
+    def __init__(self, nClasses,lstm_neurons, percentage_neurons,l1=128, l2=64, add_lstm = True, add_vector = True,
+                 add_label=True,add_loss=True):
         super(build_model,self).__init__()
         self.add_lstm = add_lstm
+        self.add_vector = add_vector
+        self.add_loss = add_loss
+        self.add_label = add_label
         self.neurons = lstm_neurons
         self.percent = percentage_neurons
         self.flatten = Flatten()
@@ -34,13 +38,25 @@ class build_model(keras.Model):
         vector_out = self.vector_output(vectors_slice)
         label_out = self.label_output(label_slice)
 
-        concat = concatenate([vector_out, loss_out, label_out], axis = 1)
+        to_concat = []
+        if self.add_vector:
+            to_concat.append(vector_out)
 
+        if self.add_loss:
+            to_concat.append(loss_out)
+
+        if self.add_label:
+            to_concat.append(label_out)
+            
         if self.add_lstm:
             lstm_slice = inputs[:, 12:int(self.neurons*self.percent)+12]
             lstm_out = self.process_lstm(lstm_slice)
-            concat = concatenate([vector_out, loss_out, label_out, lstm_out], axis = 1)
+            to_concat.append(lstm_out)
 
+        if len(to_concat) != 1:
+            concat = concatenate(to_concat, axis = 1)
+
+        concat = vector_out
         encoder = self.encoder(concat)
 
         return encoder
