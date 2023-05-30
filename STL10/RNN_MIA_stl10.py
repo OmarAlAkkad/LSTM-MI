@@ -910,7 +910,7 @@ if __name__ == "__main__":
 
     for data,method_name,save_model_folder,name in models:
 
-        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = create_stl10_dataset_torch(data, load_data = True, batch_size=64, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000)
+        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = create_stl10_dataset_torch(data, load_data = True, batch_size=64, target_train_size = 3250, target_test_size= 3250, shadow_train_size = 3250, shadow_test_size= 3250)
         batch_size = 64  #@param {type:"integer"}
         load_pretrain_weight = False   #@param {type:"boolean"}
         print('==> Building model for ' + method_name)
