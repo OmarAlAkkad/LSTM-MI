@@ -717,6 +717,10 @@ if __name__ == "__main__":
                ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
                ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
 
+    LSTM_models =[ ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
+                   ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
+                   ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
+                   ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
     lstm = True
     for data,method_name,save_model_folder,name in LSTM_models:
         target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)

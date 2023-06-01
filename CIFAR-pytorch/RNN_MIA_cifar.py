@@ -23,7 +23,7 @@ from sklearn.metrics import f1_score,recall_score,precision_score, confusion_mat
 import pandas as pd
 import random
 import numpy as np
-#@title (Run) Part 3: Prepare cifar10 dataset for target and shadow model
+#@title (Run) Part 3: Prepare CIFAR1010 dataset for target and shadow model
 import pickle
 
 #@title (Run) Part 4.2: Define required functions for DLA & DLA+RNN
@@ -331,7 +331,7 @@ def DenseNet201():
 def DenseNet161():
     return DenseNet(Bottleneck1, [6,12,36,24], growth_rate=48)
 
-def densenet_cifar():
+def densenet_CIFAR10():
     return DenseNet(Bottleneck1, [6,12,24,16], growth_rate=12)
 
 
@@ -630,171 +630,269 @@ def test(testloader, epoch, batch_size=128, logfile = "train.summary", save_mode
         torch.save(state, save_modelpath+'/ckpt.pth')
         best_acc = acc
 
-def draw_training_summary(filepath = 'target_train_DCA-BiLSTM.summary'):
+def draw_training_summary(filepaths = 'target_train_DCA-BiLSTM.summary'):
     import matplotlib.pyplot as plt
     import numpy as np
 
-    with open(filepath, 'r') as f:
-        results_summary = f.read()
-
-    train_epoch = []
-    train_loss = []
-    train_acc = []
-    test_epoch = []
-    test_loss=[]
-    test_acc=[]
-    for line in results_summary.split("\n"):
-        try:
-            r_epoch = line.split('|')[0].strip().split(' ')[1]
-            r_loss = line.split('|')[1].strip().split(' ')[2].replace('%','')
-            r_acc = line.split('|')[2].strip().split(' ')[2].replace('%','')
-            if 'Train' in line:
-                train_epoch.append(int(r_epoch))
-                train_loss.append(float(r_loss))
-                train_acc.append(float(r_acc))
-            if 'Test' in line:
-                test_epoch.append(int(r_epoch))
-                test_loss.append(float(r_loss))
-                test_acc.append(float(r_acc))
-        except:
-            print(line)
-
     # Create a new figure and plot the data
-    plt.figure(figsize=(12,4))
+    plt.figure(figsize=(26,13))
 
-    plt.subplot(1,2,1)
-    plt.plot(train_acc, label='Train')
-    plt.plot(test_acc, label='Test')
-    plt.axhline(y=np.max(test_acc), color='r', linestyle='--')
-    # Add text for the horizontal line
-    plt.text(test_epoch[-10], np.max(test_acc)*1.05, np.max(test_acc), color='r', fontsize=10)
-    # Customize the plot
-    plt.title('Accuracy Curve')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
+    for i,filepath in enumerate(filepaths):
+        print(i)
+        print(filepath)
+        with open(filepath, 'r') as f:
+            results_summary = f.read()
 
-    plt.subplot(1,2,2)
-    plt.plot(train_loss, label='Train')
-    plt.plot(test_loss, label='Test')
+        train_epoch = []
+        train_loss = []
+        train_acc = []
+        test_epoch = []
+        test_loss=[]
+        test_acc=[]
+        for line in results_summary.split("\n"):
+            try:
+                r_epoch = line.split('|')[0].strip().split(' ')[1]
+                r_loss = line.split('|')[1].strip().split(' ')[2].replace('%','')
+                r_acc = line.split('|')[2].strip().split(' ')[2].replace('%','')
+                if 'Train' in line:
+                    train_epoch.append(int(r_epoch))
+                    train_loss.append(float(r_loss))
+                    train_acc.append(float(r_acc))
+                if 'Test' in line:
+                    test_epoch.append(int(r_epoch))
+                    test_loss.append(float(r_loss))
+                    test_acc.append(float(r_acc))
+            except:
+                print(line)
 
-    # Customize the plot
-    plt.title('Loss Curve')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
+        plt.subplot(3,2,i+1)
+        plt.plot(train_acc, label='Train')
+        plt.plot(test_acc, '--' ,label='Test')
+        plt.axhline(y=np.max(test_acc), color='r', linestyle='--')
+        # Add text for the horizontal line
+        plt.text(test_epoch[-10], np.max(test_acc)*1.05, np.max(test_acc), color='r', fontsize=10)
+        # Customize the plot
+        plt.title(f'{filepath[:-8]}-Model Accuracy Curve')
+        # plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.legend()
+    plt.show()
+
+    # plt.subplot(1,2,2)
+    # plt.plot(train_loss, label='Train')
+    # plt.plot(test_loss, label='Test')
+
+    # # Customize the plot
+    # plt.title('Loss Curve')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Loss')
+    # plt.legend()
 
     # Display the plot
-    plt.show()
-#@title (Run) Part 3: Prepare cifar10 dataset for target and shadow model
+
+#@title (Run) Part 3: Prepare CIFAR1010 dataset for target and shadow model
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-def create_cifar_dataset_torch(name, load_data = False, batch_size=128, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000):
+def create_CIFAR10_dataset_torch(name, load_data = True, batch_size=128, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000):
 
   # Data
   print('==> Preparing data..')
-  if not load_data:
+  if load_data:
 
-      transform = transforms.Compose([
-            transforms.ToTensor()
-        ])
+    try:
+          data_file = open(f'target_trainloader_{name}.p', 'rb')
+          target_trainloader = pickle.load(data_file)
+          data_file.close()
+          data_file = open(f'target_testloader_{name}.p', 'rb')
+          target_testloader = pickle.load(data_file)
+          data_file.close()
+          data_file = open(f'shadow_trainloader_{name}.p', 'rb')
+          shadow_trainloader = pickle.load(data_file)
+          data_file.close()
+          data_file = open(f'shadow_test_dataset_{name}.p', 'rb')
+          shadow_testloader = pickle.load(data_file)
+          data_file.close()
 
-      cifar_trainset = torchvision.datasets.CIFAR10(
-          root='./data', train=True, download=True, transform=transform)
+    except:
 
+          transform = transforms.Compose([
+              transforms.Resize((32, 32)),
+                transforms.ToTensor()
+            ])
 
-      cifar_testset = torchvision.datasets.CIFAR10(
-          root='./data', train=False, download=True, transform=transform)
-
-      cifar_dataset = torch.utils.data.ConcatDataset([cifar_trainset, cifar_testset])
-
-
-      #target_train_size = int(0.25 * len(cifar_dataset)) # 15000
-      remain_size = len(cifar_dataset) - target_train_size
-      target_train_dataset, remain_dataset = torch.utils.data.random_split(cifar_dataset, [target_train_size, remain_size])
-
-      #target_test_size = int(0.25 * len(cifar_dataset)) # 15000
-      remain_size = len(remain_dataset) - target_test_size
-      target_test_dataset, remain_dataset = torch.utils.data.random_split(remain_dataset, [target_test_size, remain_size])
-
-      #target_test_dataset, remain_dataset = balance_val_split(remain_dataset, train_size=target_test_size)
-
-
-      #shadow_train_size = int(0.25 * len(cifar_dataset)) # 15000
-      remain_size = len(remain_dataset) - shadow_train_size
-      shadow_train_dataset, shadow_test_dataset = torch.utils.data.random_split(remain_dataset, [shadow_train_size, remain_size])
-      #shadow_train_dataset, shadow_test_dataset = balance_val_split(remain_dataset, train_size=shadow_train_size)
-
-      print("Setting target_train_dataset size to ",len(target_train_dataset), count_label_frequency(target_train_dataset))
-      print("Setting target_test_dataset size to ",len(target_test_dataset), count_label_frequency(target_test_dataset))
-      print("Setting shadow_train_dataset size to ",len(shadow_train_dataset), count_label_frequency(shadow_train_dataset))
-      print("Setting shadow_test_dataset size to ",len(shadow_test_dataset), count_label_frequency(shadow_test_dataset))
-      #print("Setting testset size to ",len(testset))
+          CIFAR10_trainset = torchvision.datasets.CIFAR10(
+              root='./data', train=True, download=True, transform=transform)
 
 
+          CIFAR10_testset = torchvision.datasets.CIFAR10 (
+              root='./data', train = False, download=True, transform=transform)
 
-      '''
-      transform_train = transforms.Compose([
-          transforms.RandomCrop(32, padding=4),
-          transforms.RandomHorizontalFlip(),
-          transforms.ToTensor(),
-          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-      ])
-      '''
+          CIFAR10_dataset = torch.utils.data.ConcatDataset([CIFAR10_trainset, CIFAR10_testset])
 
 
+          #target_train_size = int(0.25 * len(CIFAR10_dataset)) # 15000
+          remain_size = len(CIFAR10_dataset) - target_train_size
+          target_train_dataset, remain_dataset = torch.utils.data.random_split(CIFAR10_dataset, [target_train_size, remain_size])
 
-      transform_train = transforms.Compose([
-          transforms.RandomCrop(32, padding=4),
-          custom_transform,
-          transforms.ToTensor(),
-          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-      ])
+          #target_test_size = int(0.25 * len(CIFAR10_dataset)) # 15000
+          remain_size = len(remain_dataset) - target_test_size
+          target_test_dataset, remain_dataset = torch.utils.data.random_split(remain_dataset, [target_test_size, remain_size])
 
-      transform_test = transforms.Compose([
-          transforms.ToTensor(),
-          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-      ])
-
-      # apply the data augmentation transformations to the subset
-      target_train_dataset.dataset.transform = transform_train
-      # Load the transformed subset using a DataLoader
-      target_trainloader = DataLoader(target_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+          #target_test_dataset, remain_dataset = balance_val_split(remain_dataset, train_size=target_test_size)
 
 
-      target_test_dataset.dataset.transform = transform_test
-      # Load the transformed subset using a DataLoader
-      target_testloader = DataLoader(target_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+          #shadow_train_size = int(0.25 * len(CIFAR10_dataset)) # 15000
+          remain_size = len(remain_dataset) - shadow_train_size
+          shadow_train_dataset, shadow_test_dataset = torch.utils.data.random_split(remain_dataset, [shadow_train_size, remain_size])
+          #shadow_train_dataset, shadow_test_dataset = balance_val_split(remain_dataset, train_size=shadow_train_size)
+
+          print("Setting target_train_dataset size to ",len(target_train_dataset), count_label_frequency(target_train_dataset))
+          print("Setting target_test_dataset size to ",len(target_test_dataset), count_label_frequency(target_test_dataset))
+          print("Setting shadow_train_dataset size to ",len(shadow_train_dataset), count_label_frequency(shadow_train_dataset))
+          print("Setting shadow_test_dataset size to ",len(shadow_test_dataset), count_label_frequency(shadow_test_dataset))
+          #print("Setting testset size to ",len(testset))
 
 
-      # apply the data augmentation transformations to the subset
-      shadow_train_dataset.dataset.transform = transform_train
-      # Load the transformed subset using a DataLoader
-      shadow_trainloader = DataLoader(shadow_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+          '''
+          transform_train = transforms.Compose([
+              transforms.RandomCrop(32, padding=4),
+              transforms.RandomHorizontalFlip(),
+              transforms.ToTensor(),
+              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+          ])
+          '''
 
 
-      shadow_test_dataset.dataset.transform = transform_test
-      # Load the transformed subset using a DataLoader
-      shadow_testloader = DataLoader(shadow_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
 
-      pickle.dump(target_trainloader, open(f'target_trainloader_{name}.p', 'wb'))
-      pickle.dump(target_testloader, open(f'target_testloader_{name}.p', 'wb'))
-      pickle.dump(shadow_trainloader, open(f'shadow_trainloader_{name}.p', 'wb'))
-      pickle.dump(shadow_testloader, open(f'shadow_test_dataset_{name}.p', 'wb'))
+          transform_train = transforms.Compose([
+              transforms.RandomCrop(32, padding=4),
+              custom_transform,
+              transforms.ToTensor(),
+              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+          ])
 
-  data_file = open(f'target_trainloader_{name}.p', 'rb')
-  target_trainloader = pickle.load(data_file)
-  data_file.close()
-  data_file = open(f'target_testloader_{name}.p', 'rb')
-  target_testloader = pickle.load(data_file)
-  data_file.close()
-  data_file = open(f'shadow_trainloader_{name}.p', 'rb')
-  shadow_trainloader = pickle.load(data_file)
-  data_file.close()
-  data_file = open(f'shadow_test_dataset_{name}.p', 'rb')
-  shadow_testloader = pickle.load(data_file)
-  data_file.close()
+          transform_test = transforms.Compose([
+              transforms.ToTensor(),
+              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+          ])
+
+          # apply the data augmentation transformations to the subset
+          target_train_dataset.dataset.transform = transform_train
+          # Load the transformed subset using a DataLoader
+          target_trainloader = DataLoader(target_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+
+          target_test_dataset.dataset.transform = transform_test
+          # Load the transformed subset using a DataLoader
+          target_testloader = DataLoader(target_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+
+          # apply the data augmentation transformations to the subset
+          shadow_train_dataset.dataset.transform = transform_train
+          # Load the transformed subset using a DataLoader
+          shadow_trainloader = DataLoader(shadow_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+
+          shadow_test_dataset.dataset.transform = transform_test
+          # Load the transformed subset using a DataLoader
+          shadow_testloader = DataLoader(shadow_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+          pickle.dump(target_trainloader, open(f'target_trainloader_{name}.p', 'wb'))
+          pickle.dump(target_testloader, open(f'target_testloader_{name}.p', 'wb'))
+          pickle.dump(shadow_trainloader, open(f'shadow_trainloader_{name}.p', 'wb'))
+          pickle.dump(shadow_testloader, open(f'shadow_test_dataset_{name}.p', 'wb'))
+
+  else:
+          transform = transforms.Compose([
+              transforms.Resize((32, 32)),
+                transforms.ToTensor()
+            ])
+
+          CIFAR10_trainset = torchvision.datasets.CIFAR10(
+              root='./data', train=True, download=True, transform=transform)
+
+
+          CIFAR10_testset = torchvision.datasets.CIFAR10 (
+              root='./data', train=False, download=True, transform=transform)
+
+          CIFAR10_dataset = torch.utils.data.ConcatDataset([CIFAR10_trainset, CIFAR10_testset])
+
+
+          #target_train_size = int(0.25 * len(CIFAR10_dataset)) # 15000
+          remain_size = len(CIFAR10_dataset) - target_train_size
+          target_train_dataset, remain_dataset = torch.utils.data.random_split(CIFAR10_dataset, [target_train_size, remain_size])
+
+          #target_test_size = int(0.25 * len(CIFAR10_dataset)) # 15000
+          remain_size = len(remain_dataset) - target_test_size
+          target_test_dataset, remain_dataset = torch.utils.data.random_split(remain_dataset, [target_test_size, remain_size])
+
+          #target_test_dataset, remain_dataset = balance_val_split(remain_dataset, train_size=target_test_size)
+
+
+          #shadow_train_size = int(0.25 * len(CIFAR10_dataset)) # 15000
+          remain_size = len(remain_dataset) - shadow_train_size
+          shadow_train_dataset, shadow_test_dataset = torch.utils.data.random_split(remain_dataset, [shadow_train_size, remain_size])
+          #shadow_train_dataset, shadow_test_dataset = balance_val_split(remain_dataset, train_size=shadow_train_size)
+
+          print("Setting target_train_dataset size to ",len(target_train_dataset), count_label_frequency(target_train_dataset))
+          print("Setting target_test_dataset size to ",len(target_test_dataset), count_label_frequency(target_test_dataset))
+          print("Setting shadow_train_dataset size to ",len(shadow_train_dataset), count_label_frequency(shadow_train_dataset))
+          print("Setting shadow_test_dataset size to ",len(shadow_test_dataset), count_label_frequency(shadow_test_dataset))
+          #print("Setting testset size to ",len(testset))
+
+
+
+          '''
+          transform_train = transforms.Compose([
+              transforms.RandomCrop(32, padding=4),
+              transforms.RandomHorizontalFlip(),
+              transforms.ToTensor(),
+              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+          ])
+          '''
+
+
+
+          transform_train = transforms.Compose([
+              transforms.RandomCrop(32, padding=4),
+              custom_transform,
+              transforms.ToTensor(),
+              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+          ])
+
+          transform_test = transforms.Compose([
+              transforms.ToTensor(),
+              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+          ])
+
+          # apply the data augmentation transformations to the subset
+          target_train_dataset.dataset.transform = transform_train
+          # Load the transformed subset using a DataLoader
+          target_trainloader = DataLoader(target_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+
+          target_test_dataset.dataset.transform = transform_test
+          # Load the transformed subset using a DataLoader
+          target_testloader = DataLoader(target_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+
+          # apply the data augmentation transformations to the subset
+          shadow_train_dataset.dataset.transform = transform_train
+          # Load the transformed subset using a DataLoader
+          shadow_trainloader = DataLoader(shadow_train_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+
+          shadow_test_dataset.dataset.transform = transform_test
+          # Load the transformed subset using a DataLoader
+          shadow_testloader = DataLoader(shadow_test_dataset, batch_size=batch_size, shuffle=True, drop_last = True)
+
+          pickle.dump(target_trainloader, open(f'target_trainloader_{name}.p', 'wb'))
+          pickle.dump(target_testloader, open(f'target_testloader_{name}.p', 'wb'))
+          pickle.dump(shadow_trainloader, open(f'shadow_trainloader_{name}.p', 'wb'))
+          pickle.dump(shadow_testloader, open(f'shadow_test_dataset_{name}.p', 'wb'))
+
 
   return target_trainloader, target_testloader, shadow_trainloader, shadow_testloader
 
@@ -812,15 +910,19 @@ if __name__ == "__main__":
               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
               ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
 
-    models = [('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
+    models = [
+              ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
+              ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
+              ('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),
+              ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
               ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
               ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
 
     for data,method_name,save_model_folder,name in models:
 
-        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = create_cifar_dataset_torch(data, load_data = True, batch_size=64, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000)
-        batch_size = 64  #@param {type:"integer"}
-        load_pretrain_weight = False   #@param {type:"boolean"}
+        target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = create_CIFAR10_dataset_torch(data, load_data = True, batch_size=64, target_train_size = 15000, target_test_size= 15000, shadow_train_size = 15000, shadow_test_size= 15000)
+        batch_size = 64
+        load_pretrain_weight = False
         print('==> Building model for ' + method_name)
         if method_name == 'DLA-BiLSTM':
           # Model
@@ -895,8 +997,8 @@ if __name__ == "__main__":
         pytorch_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
         print("Total trained parameters: ",pytorch_total_params)
 
-        max_epoch = 30  #@param {type:"integer"}
-        train_result_summary = f'{name}.summary'   #@param {type:"string"}
+        max_epoch = 100
+        train_result_summary = f'{name}.summary'
 
         best_acc = 0  # best test accuracy
         start_epoch = 0  # start from epoch 0 or last checkpoint epoch

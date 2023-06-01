@@ -630,62 +630,64 @@ def test(testloader, epoch, batch_size=128, logfile = "train.summary", save_mode
         torch.save(state, save_modelpath+'/ckpt.pth')
         best_acc = acc
 
-def draw_training_summary(filepath = 'target_train_DCA-BiLSTM.summary'):
+def draw_training_summary(filepaths = 'target_train_DCA-BiLSTM.summary'):
     import matplotlib.pyplot as plt
     import numpy as np
 
-    with open(filepath, 'r') as f:
-        results_summary = f.read()
-
-    train_epoch = []
-    train_loss = []
-    train_acc = []
-    test_epoch = []
-    test_loss=[]
-    test_acc=[]
-    for line in results_summary.split("\n"):
-        try:
-            r_epoch = line.split('|')[0].strip().split(' ')[1]
-            r_loss = line.split('|')[1].strip().split(' ')[2].replace('%','')
-            r_acc = line.split('|')[2].strip().split(' ')[2].replace('%','')
-            if 'Train' in line:
-                train_epoch.append(int(r_epoch))
-                train_loss.append(float(r_loss))
-                train_acc.append(float(r_acc))
-            if 'Test' in line:
-                test_epoch.append(int(r_epoch))
-                test_loss.append(float(r_loss))
-                test_acc.append(float(r_acc))
-        except:
-            print(line)
-
     # Create a new figure and plot the data
-    plt.figure(figsize=(12,4))
+    plt.figure(figsize=(26,13))
 
-    plt.subplot(1,2,1)
-    plt.plot(train_acc, label='Train')
-    plt.plot(test_acc, label='Test')
-    plt.axhline(y=np.max(test_acc), color='r', linestyle='--')
-    # Add text for the horizontal line
-    plt.text(test_epoch[-10], np.max(test_acc)*1.05, np.max(test_acc), color='r', fontsize=10)
-    # Customize the plot
-    plt.title('Accuracy Curve')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
+    for i,filepath in enumerate(filepaths):
+        print(i)
+        print(filepath)
+        with open(filepath, 'r') as f:
+            results_summary = f.read()
 
-    plt.subplot(1,2,2)
-    plt.plot(train_loss, label='Train')
-    plt.plot(test_loss, label='Test')
+        train_epoch = []
+        train_loss = []
+        train_acc = []
+        test_epoch = []
+        test_loss=[]
+        test_acc=[]
+        for line in results_summary.split("\n"):
+            try:
+                r_epoch = line.split('|')[0].strip().split(' ')[1]
+                r_loss = line.split('|')[1].strip().split(' ')[2].replace('%','')
+                r_acc = line.split('|')[2].strip().split(' ')[2].replace('%','')
+                if 'Train' in line:
+                    train_epoch.append(int(r_epoch))
+                    train_loss.append(float(r_loss))
+                    train_acc.append(float(r_acc))
+                if 'Test' in line:
+                    test_epoch.append(int(r_epoch))
+                    test_loss.append(float(r_loss))
+                    test_acc.append(float(r_acc))
+            except:
+                print(line)
 
-    # Customize the plot
-    plt.title('Loss Curve')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
+        plt.subplot(3,2,i+1)
+        plt.plot(train_acc, label='Train')
+        plt.plot(test_acc, '--' ,label='Test')
+        plt.axhline(y=np.max(test_acc), color='r', linestyle='--')
+        # Add text for the horizontal line
+        plt.text(test_epoch[-10], np.max(test_acc)*1.05, np.max(test_acc), color='r', fontsize=10)
+        # Customize the plot
+        plt.title(f'{filepath[:-8]}-Model Accuracy Curve')
+        # plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.legend()
+    plt.show()
+    # plt.subplot(1,2,2)
+    # plt.plot(train_loss, label='Train')
+    # plt.plot(test_loss, label='Test')
+
+    # # Customize the plot
+    # plt.title('Loss Curve')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Loss')
+    # plt.legend()
 
     # Display the plot
-    plt.show()
 #@title (Run) Part 3: Prepare stl1010 dataset for target and shadow model
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -800,7 +802,7 @@ def create_stl10_dataset_torch(name, load_data = True, batch_size=128, target_tr
           pickle.dump(shadow_trainloader, open(f'shadow_trainloader_{name}.p', 'wb'))
           pickle.dump(shadow_testloader, open(f'shadow_test_dataset_{name}.p', 'wb'))
 
-    else:
+  else:
           transform = transforms.Compose([
               transforms.Resize((32, 32)),
                 transforms.ToTensor()
