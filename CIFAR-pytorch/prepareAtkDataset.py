@@ -16,7 +16,6 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch import Tensor
-from torchinfo import summary
 import os
 import argparse
 import math
@@ -718,19 +717,12 @@ if __name__ == "__main__":
                ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
                ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
 
-    LSTM_models = [('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
+    LSTM_models =[ ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
+                   ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
+                   ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
                    ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow')]
-
-    models = [
-              ('densenet','DenseNet121-BiLSTM','./Target-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Target'),('densenet','DenseNet121-BiLSTM','./Shadow-DenseNet121-BiLSTM_models/','DenseNet121-BiLSTM-Shadow'),
-              ('densenet','DenseNet121-LSTM','./Target-DenseNet121-LSTM_models/','DenseNet121-LSTM-Target'),('densenet','DenseNet121-LSTM','./Shadow-DenseNet121-LSTM_models/','DenseNet121-LSTM-Shadow'),
-              ('densenet','DenseNet121','./Target-DenseNet121_models/','DenseNet121-Target'),('densenet','DenseNet121','./Shadow-DenseNet121_models/','DenseNet121-Shadow'),
-              ('VGG','VGG-BiLSTM','./Target-VGG-BiLSTM_models/','VGG-BiLSTM-Target'),('VGG','VGG-BiLSTM','./Shadow-VGG-BiLSTM_models/','VGG-BiLSTM-Shadow'),
-              ('VGG','VGG-LSTM','./Target-VGG-LSTM_models/','VGG-LSTM-Target'),('VGG','VGG-LSTM','./Shadow-VGG-LSTM_models/','VGG-LSTM-Shadow'),
-              ('VGG','VGG','./Target-VGG_models/','VGG-Target'),('VGG','VGG','./Shadow-VGG_models/','VGG-Shadow')]
-
     lstm = True
-    for data,method_name,save_model_folder,name in models:
+    for data,method_name,save_model_folder,name in LSTM_models:
         target_trainloader, target_testloader, shadow_trainloader, shadow_testloader = load_data(data)
         batch_size = 64  #@param {type:"integer"}
         load_pretrain_weight = True   #@param {type:"boolean"}
@@ -792,8 +784,6 @@ if __name__ == "__main__":
 
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        print(summary(net, input_shape=(64,3,32,32)))
-
         if load_pretrain_weight:
           try:
               # Load checkpoint.
@@ -816,36 +806,36 @@ if __name__ == "__main__":
         pytorch_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
         print("Total trained parameters: ",pytorch_total_params)
 
-        # if name[-1] == 't':
-        #     if lstm:
-        #         target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels,target_train_lstm = get_attack_features(target_trainloader,lstm)
-        #         target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels,target_test_lstm = get_attack_features(target_testloader,lstm)
-        #         target_inputs, target_labels = [], []
-        #         target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,target_train_lstm, label = 1,include_losses = True, include_labels = True,include_lstm = True)
-        #         target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,target_train_lstm, label = 0,include_losses = True, include_labels = True,include_lstm = True)
-        #     else:
-        #         target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels = get_attack_features(target_trainloader,lstm)
-        #         target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels = get_attack_features(target_testloader,lstm)
-        #         target_inputs, target_labels = [], []
-        #         target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,label = 1,include_losses = True, include_labels = True)
-        #         target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,label = 0,include_losses = True, include_labels = True)
-        #     target_dataframe = create_dataframe(name, target_inputs, target_labels)
-        #     target_d = create_statistics_dataframe(name,target_train_prediction_labels, target_train_labels, target_test_prediction_labels, target_test_labels)
-        # elif name[-1] == 'w':
-        #     if lstm:
-        #         shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels, shadow_train_lstm = get_attack_features(shadow_trainloader,lstm)
-        #         shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_prediction_labels, shadow_test_lstm = get_attack_features(shadow_testloader,lstm)
-        #         shadow_inputs, shadow_labels = [], []
-        #         shadow_inputs, shadow_labels = prepare_lstm_dataframe(shadow_inputs, shadow_labels,shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_lstm,label = 1,include_losses = True, include_labels = True, include_lstm = True)
-        #         shadow_inputs, shadow_labels = prepare_lstm_dataframe(shadow_inputs, shadow_labels,shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_lstm,label = 0,include_losses = True, include_labels = True, include_lstm = True)
-        #     else:
-        #         shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels = get_attack_features(shadow_trainloader,lstm)
-        #         shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_prediction_labels = get_attack_features(shadow_testloader,lstm)
-        #         shadow_inputs, shadow_labels = [], []
-        #         shadow_inputs, shadow_labels = prepare_dataframe(shadow_inputs, shadow_labels,shadow_train_predictions,shadow_train_labels,shadow_train_losses,label = 1,include_losses = True, include_labels = True)
-        #         shadow_inputs, shadow_labels = prepare_dataframe(shadow_inputs, shadow_labels,shadow_test_predictions,shadow_test_labels,shadow_test_losses,label = 0,include_losses = True, include_labels = True)
-        #     shadow_dataframe = create_dataframe(name, shadow_inputs, shadow_labels)
-        #     shadow_d = create_statistics_dataframe(name,shadow_train_prediction_labels, shadow_train_labels, shadow_test_prediction_labels, shadow_test_labels)
+        if name[-1] == 't':
+            if lstm:
+                target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels,target_train_lstm = get_attack_features(target_trainloader,lstm)
+                target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels,target_test_lstm = get_attack_features(target_testloader,lstm)
+                target_inputs, target_labels = [], []
+                target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,target_train_lstm, label = 1,include_losses = True, include_labels = True,include_lstm = True)
+                target_inputs, target_labels = prepare_lstm_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,target_train_lstm, label = 0,include_losses = True, include_labels = True,include_lstm = True)
+            else:
+                target_train_predictions,target_train_labels,target_train_losses,target_train_prediction_labels = get_attack_features(target_trainloader,lstm)
+                target_test_predictions,target_test_labels,target_test_losses,target_test_prediction_labels = get_attack_features(target_testloader,lstm)
+                target_inputs, target_labels = [], []
+                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_train_predictions,target_train_labels,target_train_losses,label = 1,include_losses = True, include_labels = True)
+                target_inputs, target_labels = prepare_dataframe(target_inputs, target_labels,target_test_predictions,target_test_labels,target_test_losses,label = 0,include_losses = True, include_labels = True)
+            target_dataframe = create_dataframe(name, target_inputs, target_labels)
+            target_d = create_statistics_dataframe(name,target_train_prediction_labels, target_train_labels, target_test_prediction_labels, target_test_labels)
+        elif name[-1] == 'w':
+            if lstm:
+                shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels, shadow_train_lstm = get_attack_features(shadow_trainloader,lstm)
+                shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_prediction_labels, shadow_test_lstm = get_attack_features(shadow_testloader,lstm)
+                shadow_inputs, shadow_labels = [], []
+                shadow_inputs, shadow_labels = prepare_lstm_dataframe(shadow_inputs, shadow_labels,shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_lstm,label = 1,include_losses = True, include_labels = True, include_lstm = True)
+                shadow_inputs, shadow_labels = prepare_lstm_dataframe(shadow_inputs, shadow_labels,shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_lstm,label = 0,include_losses = True, include_labels = True, include_lstm = True)
+            else:
+                shadow_train_predictions,shadow_train_labels,shadow_train_losses,shadow_train_prediction_labels = get_attack_features(shadow_trainloader,lstm)
+                shadow_test_predictions,shadow_test_labels,shadow_test_losses,shadow_test_prediction_labels = get_attack_features(shadow_testloader,lstm)
+                shadow_inputs, shadow_labels = [], []
+                shadow_inputs, shadow_labels = prepare_dataframe(shadow_inputs, shadow_labels,shadow_train_predictions,shadow_train_labels,shadow_train_losses,label = 1,include_losses = True, include_labels = True)
+                shadow_inputs, shadow_labels = prepare_dataframe(shadow_inputs, shadow_labels,shadow_test_predictions,shadow_test_labels,shadow_test_losses,label = 0,include_losses = True, include_labels = True)
+            shadow_dataframe = create_dataframe(name, shadow_inputs, shadow_labels)
+            shadow_d = create_statistics_dataframe(name,shadow_train_prediction_labels, shadow_train_labels, shadow_test_prediction_labels, shadow_test_labels)
 
 
 
