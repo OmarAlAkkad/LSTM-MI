@@ -995,7 +995,7 @@ if __name__ == "__main__":
         pytorch_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
         print("Total trained parameters: ",pytorch_total_params)
 
-        max_epoch = 30  #@param {type:"integer"}
+        max_epoch = 100  #@param {type:"integer"}
         train_result_summary = f'{name}.summary'   #@param {type:"string"}
 
         best_acc = 0  # best test accuracy
